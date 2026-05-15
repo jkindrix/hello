@@ -1,0 +1,56 @@
+# Build directories
+build/
+build-*/
+out/
+cmake-build-*/
+
+# CMake artefacts
+CMakeCache.txt
+CMakeFiles/
+CMakeScripts/
+cmake_install.cmake
+install_manifest.txt
+Testing/
+CTestTestfile.cmake
+compile_commands.json
+
+# Generated files
+include/hello/version.h
+
+# Object & binary files
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.so.*
+*.dylib
+*.dll
+*.exe
+*.exp
+*.pdb
+*.ilk
+
+# Coverage
+*.gcda
+*.gcno
+*.gcov
+coverage/
+*.lcov
+
+# Editor / IDE
+.vscode/
+.idea/
+.cache/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# clangd
+.clangd/
+
+# Doxygen
+docs/html/
+docs/latex/
+docs/xml/

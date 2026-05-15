@@ -1,0 +1,147 @@
+/*
+ * SPDX-License-Identifier: MIT
+ *
+ * Unit tests for libhello. Uses a small in-file harness so the project has no
+ * mandatory external test dependency. Each TEST() runs in isolation; any
+ * failed assertion prints a diagnostic and increments the failure counter.
+ */
+#include "hello/hello.h"
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+static int g_failures = 0;
+static int g_tests = 0;
+
+#define CHECK(cond)                                                            \
+    do {                                                                       \
+        if (!(cond)) {                                                         \
+            fprintf(stderr, "  FAIL: %s:%d: %s\n", __FILE__, __LINE__, #cond); \
+            ++g_failures;                                                      \
+        }                                                                      \
+    } while (0)
+
+#define CHECK_STR_EQ(a, b)                                                     \
+    do {                                                                       \
+        const char *_a = (a);                                                  \
+        const char *_b = (b);                                                  \
+        if (_a == NULL || _b == NULL || strcmp(_a, _b) != 0) {                 \
+            fprintf(stderr,                                                    \
+                    "  FAIL: %s:%d: expected \"%s\", got \"%s\"\n", __FILE__,  \
+                    __LINE__, _b ? _b : "(null)", _a ? _a : "(null)");         \
+            ++g_failures;                                                      \
+        }                                                                      \
+    } while (0)
+
+#define TEST(name)                                                             \
+    static void name(void);                                                    \
+    static void run_##name(void) {                                             \
+        ++g_tests;                                                             \
+        fprintf(stderr, "[ RUN  ] %s\n", #name);                               \
+        int before = g_failures;                                               \
+        name();                                                                \
+        fprintf(stderr, "[ %s ] %s\n",                                         \
+                g_failures == before ? " OK " : "FAIL", #name);                \
+    }                                                                          \
+    static void name(void)
+
+TEST(format_default_name_is_world) {
+    char buf[64];
+    size_t needed = 0;
+    hello_status st = hello_format(buf, sizeof buf, NULL, &needed);
+    CHECK(st == HELLO_OK);
+    CHECK_STR_EQ(buf, "Hello, World!");
+    CHECK(needed == strlen("Hello, World!"));
+}
+
+TEST(format_empty_name_is_world) {
+    char buf[64];
+    hello_status st = hello_format(buf, sizeof buf, "", NULL);
+    CHECK(st == HELLO_OK);
+    CHECK_STR_EQ(buf, "Hello, World!");
+}
+
+TEST(format_named) {
+    char buf[64];
+    hello_status st = hello_format(buf, sizeof buf, "Ada", NULL);
+    CHECK(st == HELLO_OK);
+    CHECK_STR_EQ(buf, "Hello, Ada!");
+}
+
+TEST(format_overflow_truncates_and_reports) {
+    char buf[8]; /* "Hello, World!" needs 14 bytes incl. NUL. */
+    size_t needed = 0;
+    hello_status st = hello_format(buf, sizeof buf, "World", &needed);
+    CHECK(st == HELLO_ERR_OVERFLOW);
+    CHECK(needed == strlen("Hello, World!"));
+    /* Must remain NUL-terminated. */
+    CHECK(memchr(buf, '\0', sizeof buf) != NULL);
+}
+
+TEST(format_rejects_null_buf_with_nonzero_size) {
+    hello_status st = hello_format(NULL, 16, "x", NULL);
+    CHECK(st == HELLO_ERR_INVALID_ARG);
+}
+
+TEST(format_allows_zero_size_query) {
+    size_t needed = 0;
+    hello_status st = hello_format(NULL, 0, "Ada", &needed);
+    /* With buf_size == 0 the call is a length query; should report overflow
+     * but still set `needed` so callers can size their buffer. */
+    CHECK(st == HELLO_ERR_OVERFLOW);
+    CHECK(needed == strlen("Hello, Ada!"));
+}
+
+TEST(greet_rejects_null_stream) {
+    hello_status st = hello_greet(NULL, "x");
+    CHECK(st == HELLO_ERR_INVALID_ARG);
+}
+
+TEST(greet_writes_expected_bytes) {
+    /* tmpfile() gives us a binary-safe temp stream we can rewind and read. */
+    FILE *fp = tmpfile();
+    if (fp == NULL) {
+        fprintf(stderr, "  SKIP: tmpfile() unavailable\n");
+        return;
+    }
+    hello_status st = hello_greet(fp, "Grace");
+    CHECK(st == HELLO_OK);
+    rewind(fp);
+    char buf[64] = {0};
+    size_t n = fread(buf, 1, sizeof buf - 1, fp);
+    buf[n] = '\0';
+    CHECK_STR_EQ(buf, "Hello, Grace!\n");
+    fclose(fp);
+}
+
+TEST(version_is_nonempty) {
+    const char *v = hello_version();
+    CHECK(v != NULL);
+    CHECK(v[0] != '\0');
+}
+
+TEST(status_string_covers_all_codes) {
+    CHECK_STR_EQ(hello_status_string(HELLO_OK), "ok");
+    CHECK(hello_status_string(HELLO_ERR_INVALID_ARG)[0] != '\0');
+    CHECK(hello_status_string(HELLO_ERR_IO)[0] != '\0');
+    CHECK(hello_status_string(HELLO_ERR_OVERFLOW)[0] != '\0');
+    /* Unknown codes still produce a non-empty string. */
+    CHECK(hello_status_string((hello_status)999)[0] != '\0');
+}
+
+int main(void) {
+    run_format_default_name_is_world();
+    run_format_empty_name_is_world();
+    run_format_named();
+    run_format_overflow_truncates_and_reports();
+    run_format_rejects_null_buf_with_nonzero_size();
+    run_format_allows_zero_size_query();
+    run_greet_rejects_null_stream();
+    run_greet_writes_expected_bytes();
+    run_version_is_nonempty();
+    run_status_string_covers_all_codes();
+
+    fprintf(stderr, "\n%d test(s), %d failure(s)\n", g_tests, g_failures);
+    return g_failures == 0 ? 0 : 1;
+}

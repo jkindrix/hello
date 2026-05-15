@@ -1,0 +1,15 @@
+* text=auto eol=lf
+
+*.c       text diff=cpp
+*.h       text diff=cpp
+*.cmake   text
+CMakeLists.txt text
+*.md      text
+*.yml     text
+*.yaml    text
+*.json    text
+*.sh      text eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
