@@ -1,8 +1,10 @@
 /*
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2026 hello contributors
- *
- * CLI front-end for libhello.
+ */
+/**
+ * @file main.c
+ * @brief CLI front-end for libhello.
  *
  * Usage:
  *   hello [NAME]...
@@ -10,6 +12,12 @@
  *   hello --help
  *
  * If no NAME is supplied, greets "World". Multiple NAMEs are greeted in order.
+ *
+ * Exit codes:
+ *   - 0  success (greeting written, or --help / --version printed)
+ *   - 1  the library returned a non-OK status for at least one greeting
+ *   - 2  an I/O error occurred writing to stdout, or an unknown option was
+ *        passed on the command line
  */
 #include "hello/hello.h"
 

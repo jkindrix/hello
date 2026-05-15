@@ -44,6 +44,16 @@ cmake --preset tsan            && cmake --build --preset tsan
 cmake --preset coverage        && cmake --build --preset coverage
 ```
 
+## CLI exit codes
+
+| Code | Meaning                                                                  |
+| ---- | ------------------------------------------------------------------------ |
+| 0    | Success — greeting written, or `--help` / `--version` printed.           |
+| 1    | The library returned a non-OK status for at least one greeting.          |
+| 2    | I/O error writing to stdout, or an unknown option on the command line.   |
+
+These are stable and suitable for shell scripting.
+
 ## Test
 
 ```sh
@@ -82,6 +92,27 @@ Or as a subproject:
 add_subdirectory(third_party/hello)
 target_link_libraries(my_app PRIVATE hello::hello)
 ```
+
+## Consuming on Windows / MSVC
+
+The CI matrix builds `hello` with MSVC on `windows-latest`. A few notes for
+downstream MSVC consumers:
+
+- **Static linkage (default)** — no extra defines needed. `find_package(hello)`
+  + `target_link_libraries(my_app PRIVATE hello::hello)` is sufficient.
+- **Shared linkage** — build `hello` with `-DBUILD_SHARED_LIBS=ON`. The
+  package config tags consumers with `HELLO_USE_SHARED` automatically, so
+  the `HELLO_API` macro resolves to `__declspec(dllimport)` on the consumer
+  side. If you are *not* using CMake to consume, define `HELLO_USE_SHARED`
+  yourself before including `<hello/hello.h>`.
+- **AddressSanitizer** — MSVC supports `/fsanitize=address` since VS 2019
+  16.9. Set the `asan` CMake preset (which uses `/fsanitize=address` on
+  MSVC) and ensure the matching `clang_rt.asan_dynamic-*.dll` is on `PATH`
+  when running the binary.
+- **Hardening flags** — `_FORTIFY_SOURCE`, RELRO/BIND_NOW, and `-pie` are
+  no-ops or unsupported on Windows; the build skips them automatically.
+  MSVC's own mitigations (`/GS`, `/guard:cf`, ASLR via `/DYNAMICBASE`) are
+  on by default and unaffected.
 
 ## Consuming from non-CMake build systems
 
@@ -127,8 +158,14 @@ treated as `"World"`. Buffers are always NUL-terminated on return.
 
 - Format: `scripts/format.sh` (runs `clang-format -i` on all sources).
 - Lint:   `scripts/lint.sh`   (runs `clang-tidy` against `compile_commands.json`).
-- CI:     see `.github/workflows/ci.yml` for the build/test matrix, sanitizer,
-  lint, coverage, and Doxygen jobs.
+- Hooks:  `scripts/install-hooks.sh` wires `core.hooksPath` to `.githooks/`,
+  enabling a `clang-format --dry-run -Werror` check on staged C sources at
+  commit time.
+- Fuzz:   `cmake --build build/fuzz --target fuzz_format` then
+  `./build/fuzz/tests/fuzz/fuzz_format tests/fuzz/corpus -max_total_time=60`.
+- CI:     see `.github/workflows/ci.yml` for the build/test matrix, sanitizer
+  (ASan+UBSan, TSan), lint, coverage, fuzz, downstream-consumer, and Doxygen
+  jobs.
 
 ## License
 

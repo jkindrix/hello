@@ -1,8 +1,14 @@
 /*
  * SPDX-License-Identifier: MIT
  * Copyright (c) 2026 hello contributors
+ */
+/**
+ * @file hello.c
+ * @brief Implementation of the hello library.
  *
- * Implementation of the hello library.
+ * Holds the formatting and streaming routines declared in
+ * `include/hello/hello.h`. No global state; the only shared resource is the
+ * caller-supplied `FILE *` in ::hello_greet.
  */
 #include "hello/hello.h"
 

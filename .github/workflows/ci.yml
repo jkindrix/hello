@@ -69,6 +69,22 @@ jobs:
           ASAN_OPTIONS: detect_leaks=1:strict_string_checks=1:halt_on_error=1
           UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
 
+  tsan:
+    name: ThreadSanitizer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: seanmiddleditch/gha-setup-ninja@v5
+      - name: Install clang
+        run: sudo apt-get update && sudo apt-get install -y clang
+      - run: cmake --preset tsan
+        env:
+          CC: clang
+      - run: cmake --build --preset tsan
+      - run: ctest --test-dir build/tsan --output-on-failure
+        env:
+          TSAN_OPTIONS: halt_on_error=1:second_deadlock_stack=1
+
   lint:
     name: clang-format + clang-tidy
     runs-on: ubuntu-latest
@@ -147,8 +163,11 @@ jobs:
         run: cmake -S . -B build/fuzz -G Ninja -DCMAKE_BUILD_TYPE=Debug -DHELLO_BUILD_FUZZERS=ON
       - name: Build fuzz target
         run: cmake --build build/fuzz --target fuzz_format
-      - name: Run fuzzer briefly
-        run: ./build/fuzz/tests/fuzz/fuzz_format -max_total_time=20 -print_final_stats=1
+      - name: Run fuzzer briefly (with seed corpus)
+        run: |
+          ./build/fuzz/tests/fuzz/fuzz_format tests/fuzz/corpus \
+              -max_total_time=20 \
+              -print_final_stats=1
 
   docs:
     name: Doxygen

@@ -8,6 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- ThreadSanitizer CI job to keep the `tsan` preset honest. Single-threaded
+  today, but future-proofs the harness.
+- Fuzz seed corpus under `tests/fuzz/corpus/` (empty input, ASCII names,
+  spaces, embedded NULs, long inputs, UTF-8). The CI fuzz job now starts
+  the fuzzer pointed at the corpus instead of mutating from scratch.
+- Git pre-commit hook at `.githooks/pre-commit` plus
+  `scripts/install-hooks.sh` to wire `core.hooksPath`. Runs
+  `clang-format --dry-run -Werror` on staged C sources locally so the
+  feedback loop is shorter than waiting for the lint CI job.
+- README: a "Consuming on Windows / MSVC" section covering static vs
+  shared linkage, `HELLO_USE_SHARED`, `/fsanitize=address`, and how the
+  Linux-specific hardening flags are skipped on MSVC.
+- README: a CLI exit-code table (0 / 1 / 2 semantics) for scripting
+  consumers.
+- Doxygen `@file` blocks on `src/hello.c` and `src/main.c`.
+
 - `pkg-config` integration: a relocatable `hello.pc` is generated and
   installed to `<libdir>/pkgconfig`. The file uses `${pcfiledir}` so it works
   after the install tree is moved.
