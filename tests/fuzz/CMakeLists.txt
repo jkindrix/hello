@@ -1,10 +1,7 @@
-# Fuzz targets require Clang with libFuzzer support. The HELLO_BUILD_FUZZERS
-# option must be set explicitly; we don't auto-detect because the resulting
-# binaries are not usable as ordinary tests.
-
-if(NOT CMAKE_C_COMPILER_ID MATCHES "Clang")
-    message(FATAL_ERROR "HELLO_BUILD_FUZZERS=ON requires Clang (got ${CMAKE_C_COMPILER_ID})")
-endif()
+# Fuzz targets require Clang with libFuzzer support. The Clang gate lives in
+# the top-level CMakeLists.txt, which auto-disables HELLO_BUILD_FUZZERS with
+# a warning on non-Clang toolchains; reaching this file means the check has
+# already passed.
 
 add_executable(fuzz_format fuzz_format.c)
 target_link_libraries(fuzz_format PRIVATE hello::hello)

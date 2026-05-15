@@ -42,3 +42,16 @@ set_tests_properties(cli_help PROPERTIES
     PASS_REGULAR_EXPRESSION "Usage:"
     TIMEOUT 10
 )
+
+# Visibility plumbing check: only meaningful for shared builds on ELF, where
+# a leaked private symbol would actually appear in the dynamic symbol table.
+# Static builds expose everything to linkers regardless, so the test is a
+# no-op there.
+if(BUILD_SHARED_LIBS AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    add_test(NAME symbol_export_check
+        COMMAND bash
+            "${CMAKE_CURRENT_SOURCE_DIR}/check_exports.sh"
+            $<TARGET_FILE:hello>
+    )
+    set_tests_properties(symbol_export_check PROPERTIES TIMEOUT 10)
+endif()

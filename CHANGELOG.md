@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- `symbol_export_check` CTest test (Linux + `BUILD_SHARED_LIBS=ON` only) plus
+  a new `shared-build` CI job. Asserts that `libhello.so`'s dynamic symbol
+  table is exactly the four documented public functions, so a future
+  contributor who forgets `static` on a helper or `HELLO_API` on a new public
+  symbol gets caught.
 - ThreadSanitizer CI job to keep the `tsan` preset honest. Single-threaded
   today, but future-proofs the harness.
 - Fuzz seed corpus under `tests/fuzz/corpus/` (empty input, ASCII names,
@@ -50,6 +55,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New CLI smoke test that exercises multiple positional NAME arguments.
 
 ### Changed
+- `HELLO_BUILD_FUZZERS=ON` on a non-Clang toolchain now emits a
+  `message(WARNING)` and auto-disables the option instead of failing the
+  configure step with `FATAL_ERROR`. Consumers no longer have to remember
+  to unset the option when switching compilers.
 - CLI: `--help` now propagates stdout I/O failures with exit code 2, matching
   `--version`'s behavior.
 - Hardening: auto-detect glibc `_FORTIFY_SOURCE=3` support and prefer it over

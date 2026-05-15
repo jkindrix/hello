@@ -125,6 +125,21 @@ jobs:
           name: coverage-report
           path: coverage.info
 
+  shared-build:
+    name: Shared library + symbol-export check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: seanmiddleditch/gha-setup-ninja@v5
+      - name: Configure shared
+        run: cmake -S . -B build/shared -G Ninja
+                   -DBUILD_SHARED_LIBS=ON
+                   -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build/shared
+      - name: Test (includes symbol_export_check)
+        run: ctest --test-dir build/shared --output-on-failure
+
   install-consumer:
     name: Install + downstream find_package
     runs-on: ubuntu-latest

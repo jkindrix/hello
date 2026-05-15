@@ -122,7 +122,14 @@ if(HELLO_BUILD_TESTS)
 endif()
 
 if(HELLO_BUILD_FUZZERS)
-    add_subdirectory(tests/fuzz)
+    if(CMAKE_C_COMPILER_ID MATCHES "Clang")
+        add_subdirectory(tests/fuzz)
+    else()
+        message(WARNING
+            "HELLO_BUILD_FUZZERS=ON ignored: libFuzzer requires Clang "
+            "(got ${CMAKE_C_COMPILER_ID}). Re-run with CC=clang to enable.")
+        set(HELLO_BUILD_FUZZERS OFF CACHE BOOL "" FORCE)
+    endif()
 endif()
 
 # --------------------------------------------------------------------------- #
