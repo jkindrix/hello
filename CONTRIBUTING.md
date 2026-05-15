@@ -3,6 +3,17 @@
 Thanks for considering a contribution! This project is small but its standards
 are not. Please read this before opening a pull request.
 
+## One-time maintainer setup
+
+Two repository settings have to be flipped by hand the first time you publish
+this template; the CI pipeline assumes both are in place:
+
+- **Settings → Pages → Source: GitHub Actions.** The `pages` job in
+  `.github/workflows/ci.yml` deploys the Doxygen site on every push to
+  `main` and will fail until this is set.
+- **Settings → Code security → Code scanning: enable CodeQL.** Required
+  before `.github/workflows/codeql.yml` can upload SARIF results.
+
 ## Ground rules
 
 - **Discuss before large changes.** Open an issue first for anything beyond a

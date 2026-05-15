@@ -8,71 +8,79 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- `symbol_export_check` CTest test (Linux + `BUILD_SHARED_LIBS=ON` only) plus
-  a new `shared-build` CI job. Asserts that `libhello.so`'s dynamic symbol
-  table is exactly the four documented public functions, so a future
-  contributor who forgets `static` on a helper or `HELLO_API` on a new public
-  symbol gets caught.
-- ThreadSanitizer CI job to keep the `tsan` preset honest. Single-threaded
-  today, but future-proofs the harness.
-- Fuzz seed corpus under `tests/fuzz/corpus/` (empty input, ASCII names,
-  spaces, embedded NULs, long inputs, UTF-8). The CI fuzz job now starts
-  the fuzzer pointed at the corpus instead of mutating from scratch.
+- CLI `--` end-of-options terminator so names beginning with `-` can be
+  greeted (`hello -- --version` greets the literal name `--version`).
+  Covered by two new CTest cases.
+- Unit test for the `HELLO_ERR_IO` branch of `hello_greet`, driving
+  `fprintf` failure via a pipe with its read end closed and `SIGPIPE`
+  ignored. POSIX-guarded; skipped on Windows.
+- CodeQL workflow (`security-and-quality` queries, weekly schedule).
+- Coverage CI job now enforces a 90 % line-coverage floor; the artifact
+  upload still runs for inspection.
+- Doxygen site is published to GitHub Pages on push to `main`. PRs build
+  docs as an artifact but do not deploy.
+- `symbol_export_check` CTest test (Linux + `BUILD_SHARED_LIBS=ON` only)
+  plus a `shared-build` CI job. Asserts that `libhello.so`'s dynamic
+  symbol table is exactly the four documented public functions.
+- ThreadSanitizer CI job to keep the `tsan` preset honest.
+- Fuzz seed corpus under `tests/fuzz/corpus/` (empty, ASCII, spaces,
+  embedded NUL, long input, UTF-8). The fuzz CI job now starts the
+  fuzzer pointed at the corpus instead of mutating from scratch.
 - Git pre-commit hook at `.githooks/pre-commit` plus
   `scripts/install-hooks.sh` to wire `core.hooksPath`. Runs
-  `clang-format --dry-run -Werror` on staged C sources locally so the
-  feedback loop is shorter than waiting for the lint CI job.
-- README: a "Consuming on Windows / MSVC" section covering static vs
-  shared linkage, `HELLO_USE_SHARED`, `/fsanitize=address`, and how the
-  Linux-specific hardening flags are skipped on MSVC.
-- README: a CLI exit-code table (0 / 1 / 2 semantics) for scripting
-  consumers.
-- Doxygen `@file` blocks on `src/hello.c` and `src/main.c`.
-
-- `pkg-config` integration: a relocatable `hello.pc` is generated and
-  installed to `<libdir>/pkgconfig`. The file uses `${pcfiledir}` so it works
-  after the install tree is moved.
-- Downstream consumer test under `tests/consumer/`: a minimal external
-  project that `find_package(hello)`-s and links `hello::hello`. A new
+  `clang-format --dry-run -Werror` on staged C sources locally.
+- `pkg-config` integration: a relocatable `hello.pc` (uses
+  `${pcfiledir}`) is generated and installed to `<libdir>/pkgconfig`.
+- Downstream consumer test under `tests/consumer/`. A new
   `install-consumer` CI job installs the library to a staging prefix,
   verifies `pkg-config --cflags --libs hello`, and builds + runs the
   consumer end-to-end.
-- libFuzzer harness under `tests/fuzz/` plus a `HELLO_BUILD_FUZZERS` CMake
-  option (Clang-only) and a `fuzz` CI job that runs `fuzz_format` for ~20s
-  on every push.
+- libFuzzer harness under `tests/fuzz/` plus a `HELLO_BUILD_FUZZERS`
+  CMake option (Clang-only) and a `fuzz` CI job that runs `fuzz_format`
+  for ~20 s on every push.
 - `.github/dependabot.yml` to keep CI actions current.
 - `.github/CODEOWNERS`, `PULL_REQUEST_TEMPLATE.md`, and issue templates
   (bug, feature, security-disclosure pointer).
-- README status badges (CI, license, C standard, CMake version) and a
-  "Consuming from non-CMake build systems" section.
-
-### Fixed
-- CTest CLI smoke-test regexes now accept `\r?\n` so they pass on Windows
-  text-mode stdout (previously anchored on bare `\n`, which never matched
-  `\r\n`).
-
-### Added
-- New CLI smoke test that exercises multiple positional NAME arguments.
+- New CLI smoke test exercising multiple positional NAME arguments.
+- README: status badges (CI, CodeQL, license, C standard, CMake
+  version), CLI exit-code table, "Consuming on Windows / MSVC" section,
+  "Consuming from non-CMake build systems" section, versioning &
+  ABI-stability policy, and a link to the published Doxygen site.
+- README: Doxygen `@file` blocks on `src/hello.c` and `src/main.c`.
+- CONTRIBUTING: one-time maintainer-setup note covering the
+  GitHub-Pages source toggle and CodeQL enablement.
 
 ### Changed
-- `HELLO_BUILD_FUZZERS=ON` on a non-Clang toolchain now emits a
-  `message(WARNING)` and auto-disables the option instead of failing the
-  configure step with `FATAL_ERROR`. Consumers no longer have to remember
-  to unset the option when switching compilers.
-- CLI: `--help` now propagates stdout I/O failures with exit code 2, matching
-  `--version`'s behavior.
-- Hardening: auto-detect glibc `_FORTIFY_SOURCE=3` support and prefer it over
-  `=2` in non-Debug builds.
+- Split the `docs` workflow job into a build-only `docs` job (runs on
+  every trigger, uploads the artifact) and a deploy-only `pages` job
+  (push-to-main only, owns the `pages`/`id-token` permissions and the
+  `github-pages` environment). PRs no longer carry deploy permissions
+  or surface an empty Pages URL.
+- CodeQL job builds with `-G Ninja` instead of Unix Makefiles and with
+  `-DHELLO_WARNINGS_AS_ERRORS=OFF` so a future CodeQL-injected warning
+  cannot mask the analyzer findings by failing the build.
+- `HELLO_BUILD_FUZZERS=ON` on a non-Clang toolchain now emits
+  `message(WARNING)` and auto-disables the option instead of failing
+  configure with `FATAL_ERROR`.
+- CLI: `--help` now propagates stdout I/O failures with exit code 2,
+  matching `--version`'s behavior.
+- Hardening: auto-detect glibc `_FORTIFY_SOURCE=3` support and prefer
+  it over `=2` in non-Debug builds.
 - Hardening: link executables on Linux with `-pie`, `-Wl,-z,relro`,
   `-Wl,-z,now`, `-Wl,-z,noexecstack`.
-- CI: drop the `ctest --preset default` invocation on the release matrix leg
-  (the preset only targets Debug) and just call `ctest` directly.
-- CI: add a `docs` job that builds the Doxygen site and uploads it as an
-  artifact.
+- CI: drop the `ctest --preset default` invocation on the release
+  matrix leg (the preset only targets Debug); call `ctest` directly.
 - CMake: drop the placeholder `HOMEPAGE_URL`.
-- SECURITY.md: document the actual hardening set (FORTIFY=3 with =2 fallback,
-  PIE, full RELRO, BIND_NOW, noexecstack) instead of the stale FORTIFY=2 list.
-- README: clarify that the CI bullet refers to GitHub Actions, not git hooks.
+- SECURITY.md: document the actual hardening set (FORTIFY=3 with =2
+  fallback, PIE, full RELRO, BIND_NOW, noexecstack) instead of the
+  stale FORTIFY=2 list.
+- Coverage threshold extraction now anchors `^ *lines\.+:` instead of
+  the ambiguous `lines\.*:`, and reports an explicit error if the
+  percentage cannot be parsed.
+
+### Fixed
+- CTest CLI smoke-test regexes now accept `\r?\n` so they pass on
+  Windows text-mode stdout (previously anchored on bare `\n`).
 
 ## [1.0.0] - 2026-05-15
 

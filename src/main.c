@@ -8,10 +8,12 @@
  *
  * Usage:
  *   hello [NAME]...
+ *   hello -- [NAME]...
  *   hello --version
  *   hello --help
  *
  * If no NAME is supplied, greets "World". Multiple NAMEs are greeted in order.
+ * A bare "--" ends option processing so names beginning with '-' can be used.
  *
  * Exit codes:
  *   - 0  success (greeting written, or --help / --version printed)
@@ -28,18 +30,23 @@
 static int print_usage(FILE *stream, const char *prog) {
     int rc = fprintf(stream,
                      "Usage: %s [NAME]...\n"
+                     "       %s -- [NAME]...\n"
                      "       %s --version\n"
                      "       %s --help\n"
                      "\n"
-                     "Print a friendly greeting. With no NAME, greets \"World\".\n",
-                     prog, prog, prog);
+                     "Print a friendly greeting. With no NAME, greets \"World\".\n"
+                     "Use \"--\" to greet names that begin with \"-\".\n",
+                     prog, prog, prog, prog);
     return rc < 0 ? 2 : 0;
 }
 
 int main(int argc, char *argv[]) {
     const char *prog = (argc > 0 && argv[0] != NULL) ? argv[0] : "hello";
 
-    /* Recognize options only if they appear before any positional argument. */
+    /* Recognize options only if they appear before any positional argument.
+     * A bare "--" terminates option processing; subsequent arguments are
+     * treated as names even if they begin with '-'. */
+    int first_name = 1;
     if (argc >= 2) {
         const char *arg = argv[1];
         if (strcmp(arg, "--help") == 0 || strcmp(arg, "-h") == 0) {
@@ -51,14 +58,16 @@ int main(int argc, char *argv[]) {
             }
             return 0;
         }
-        if (arg[0] == '-' && arg[1] != '\0') {
+        if (strcmp(arg, "--") == 0) {
+            first_name = 2;
+        } else if (arg[0] == '-' && arg[1] != '\0') {
             fprintf(stderr, "%s: unknown option: %s\n", prog, arg);
             print_usage(stderr, prog);
             return 2;
         }
     }
 
-    if (argc < 2) {
+    if (first_name >= argc) {
         hello_status st = hello_greet(stdout, NULL);
         if (st != HELLO_OK) {
             fprintf(stderr, "%s: %s\n", prog, hello_status_string(st));
@@ -67,7 +76,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    for (int i = 1; i < argc; ++i) {
+    for (int i = first_name; i < argc; ++i) {
         hello_status st = hello_greet(stdout, argv[i]);
         if (st != HELLO_OK) {
             fprintf(stderr, "%s: %s\n", prog, hello_status_string(st));

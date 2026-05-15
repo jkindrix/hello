@@ -1,0 +1,46 @@
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Weekly re-scan so newly-published queries catch regressions in dormant code.
+    - cron: '23 6 * * 1'
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+jobs:
+  analyze:
+    name: Analyze (C)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: seanmiddleditch/gha-setup-ninja@v5
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: c
+          queries: security-and-quality
+
+      # -Werror is intentionally disabled here. The point of this job is the
+      # CodeQL analyzer findings, not the warning gate (that is the lint job's
+      # responsibility). If a future CodeQL instrumentation pass produces a
+      # benign warning, we still want the analysis to complete.
+      - name: Build
+        run: |
+          cmake -S . -B build/codeql -G Ninja \
+                -DCMAKE_BUILD_TYPE=Debug \
+                -DHELLO_WARNINGS_AS_ERRORS=OFF
+          cmake --build build/codeql -j
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:c"

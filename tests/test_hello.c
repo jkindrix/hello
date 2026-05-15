@@ -5,11 +5,25 @@
  * mandatory external test dependency. Each TEST() runs in isolation; any
  * failed assertion prints a diagnostic and increments the failure counter.
  */
+/* Enable POSIX prototypes (fdopen, pipe) under strict C17. Must precede any
+ * system header includes. */
+#if defined(__unix__) || defined(__APPLE__)
+#  ifndef _POSIX_C_SOURCE
+#    define _POSIX_C_SOURCE 200809L
+#  endif
+#endif
+
 #include "hello/hello.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if defined(__unix__) || defined(__APPLE__)
+#  define HELLO_HAVE_PIPE_IO_TEST 1
+#  include <signal.h>
+#  include <unistd.h>
+#endif
 
 static int g_failures = 0;
 static int g_tests = 0;
@@ -115,6 +129,35 @@ TEST(greet_writes_expected_bytes) {
     fclose(fp);
 }
 
+#ifdef HELLO_HAVE_PIPE_IO_TEST
+TEST(greet_reports_io_error_on_broken_pipe) {
+    /* Force fprintf to fail by writing to the write-end of a pipe whose
+     * read-end has been closed. SIGPIPE must be ignored or the process
+     * dies before fprintf returns. Unbuffered mode ensures the write
+     * reaches the kernel immediately. */
+    void (*old_handler)(int) = signal(SIGPIPE, SIG_IGN);
+    int fds[2];
+    if (pipe(fds) != 0) {
+        fprintf(stderr, "  SKIP: pipe() unavailable\n");
+        signal(SIGPIPE, old_handler);
+        return;
+    }
+    close(fds[0]);
+    FILE *fp = fdopen(fds[1], "w");
+    if (fp == NULL) {
+        close(fds[1]);
+        signal(SIGPIPE, old_handler);
+        fprintf(stderr, "  SKIP: fdopen() unavailable\n");
+        return;
+    }
+    setvbuf(fp, NULL, _IONBF, 0);
+    hello_status st = hello_greet(fp, "Ada");
+    CHECK(st == HELLO_ERR_IO);
+    fclose(fp);
+    signal(SIGPIPE, old_handler);
+}
+#endif
+
 TEST(version_is_nonempty) {
     const char *v = hello_version();
     CHECK(v != NULL);
@@ -139,6 +182,9 @@ int main(void) {
     run_format_allows_zero_size_query();
     run_greet_rejects_null_stream();
     run_greet_writes_expected_bytes();
+#ifdef HELLO_HAVE_PIPE_IO_TEST
+    run_greet_reports_io_error_on_broken_pipe();
+#endif
     run_version_is_nonempty();
     run_status_string_covers_all_codes();
 

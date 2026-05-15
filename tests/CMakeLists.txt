@@ -31,6 +31,18 @@ set_tests_properties(cli_multi_name_greeting PROPERTIES
     TIMEOUT 10
 )
 
+add_test(NAME cli_double_dash_terminator COMMAND hello_cli -- --version)
+set_tests_properties(cli_double_dash_terminator PROPERTIES
+    PASS_REGULAR_EXPRESSION "^Hello, --version!\r?\n$"
+    TIMEOUT 10
+)
+
+add_test(NAME cli_double_dash_alone COMMAND hello_cli --)
+set_tests_properties(cli_double_dash_alone PROPERTIES
+    PASS_REGULAR_EXPRESSION "^Hello, World!\r?\n$"
+    TIMEOUT 10
+)
+
 add_test(NAME cli_version COMMAND hello_cli --version)
 set_tests_properties(cli_version PROPERTIES
     PASS_REGULAR_EXPRESSION "^hello [0-9]+\\.[0-9]+\\.[0-9]+\r?\n$"

@@ -1,6 +1,7 @@
 # hello
 
 [![CI](https://github.com/jkindrix/hello/actions/workflows/ci.yml/badge.svg)](https://github.com/jkindrix/hello/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/jkindrix/hello/actions/workflows/codeql.yml/badge.svg)](https://github.com/jkindrix/hello/actions/workflows/codeql.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![C17](https://img.shields.io/badge/C-17-informational.svg)](https://www.iso.org/standard/74528.html)
 [![CMake >= 3.20](https://img.shields.io/badge/CMake-%E2%89%A5%203.20-informational.svg)](CMakeLists.txt)
@@ -61,8 +62,9 @@ ctest --preset default
 ```
 
 The suite covers the library's API (default name, empty name, named greeting,
-buffer overflow handling, NULL-argument rejection, status strings) and runs
-smoke tests against the CLI (`--help`, `--version`, default and named output).
+buffer overflow handling, NULL-argument rejection, I/O error on broken pipe,
+status strings) and runs smoke tests against the CLI (`--help`, `--version`,
+`--` end-of-options terminator, default, named, and multi-name output).
 
 ## Install
 
@@ -153,6 +155,28 @@ const char  *hello_status_string(hello_status status);
 
 All functions are thread-safe (no global state). `NULL` or empty names are
 treated as `"World"`. Buffers are always NUL-terminated on return.
+
+API reference (Doxygen) is published from `main` to
+<https://jkindrix.github.io/hello/>.
+
+## Versioning & ABI stability
+
+`hello` follows [Semantic Versioning](https://semver.org/):
+
+- **Major** (`X.0.0`) — may break the public C API or ABI. Source and binary
+  consumers may need to be updated and rebuilt.
+- **Minor** (`1.X.0`) — adds API surface without breaking existing callers.
+  Shared-library `SOVERSION` is preserved; old binaries keep working.
+- **Patch** (`1.0.X`) — bug fixes and documentation only. No API or ABI change.
+
+The public surface is exactly the symbols declared in `include/hello/hello.h`
+and tagged with `HELLO_API`. Everything else — including any symbol with a
+name beginning with `hello_` that is *not* declared in that header — is
+private and may change without notice. The `shared-build` CI job runs a
+`symbol_export_check` test on Linux that enforces this on every push.
+
+`SOVERSION` is set to the major version, so `libhello.so.1` is the binary
+contract for the 1.x series.
 
 ## Development
 

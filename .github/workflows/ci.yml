@@ -120,6 +120,23 @@ jobs:
                --rc lcov_branch_coverage=1
           lcov --remove coverage.info '/usr/*' '*/tests/*' --output-file coverage.info
           lcov --list coverage.info
+      - name: Enforce minimum line coverage
+        env:
+          MIN_LINE_COVERAGE: '90'
+        run: |
+          # Extract overall line coverage % from lcov --summary output.
+          # lcov prints "  lines......: 95.5% (160 of 168 lines)"; match the
+          # leading "lines" label, strip the % off the second field.
+          pct=$(lcov --summary coverage.info 2>&1 \
+                | awk '/^ *lines\.+:/ {gsub("%",""); print $2; exit}')
+          if [ -z "$pct" ]; then
+            echo "::error::could not parse line coverage from lcov --summary"
+            exit 1
+          fi
+          echo "line coverage: ${pct}% (floor: ${MIN_LINE_COVERAGE}%)"
+          awk -v p="$pct" -v f="$MIN_LINE_COVERAGE" \
+              'BEGIN { exit (p+0 >= f+0) ? 0 : 1 }' \
+            || { echo "::error::line coverage ${pct}% < ${MIN_LINE_COVERAGE}%"; exit 1; }
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-report
@@ -187,6 +204,8 @@ jobs:
   docs:
     name: Doxygen
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - name: Install Doxygen
@@ -197,3 +216,36 @@ jobs:
         with:
           name: api-docs
           path: docs/html
+
+  # Separate from `docs` so PR builds don't carry pages:write / id-token:write
+  # permissions and don't show an empty Pages URL in their job summary. The
+  # build is duplicated rather than passed via artifact because doxygen on this
+  # codebase runs in well under 10 seconds, and a clean rebuild is simpler than
+  # plumbing actions/download-artifact between jobs.
+  pages:
+    name: Deploy Doxygen to GitHub Pages
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: docs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Doxygen
+        run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
+      - name: Build docs
+        run: doxygen docs/Doxyfile
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/html
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
