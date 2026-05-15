@@ -16,14 +16,16 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Returns 0 on success, non-zero on I/O failure (mirrors main's exit codes). */
 static int print_usage(FILE *stream, const char *prog) {
-    return fprintf(stream,
-                   "Usage: %s [NAME]...\n"
-                   "       %s --version\n"
-                   "       %s --help\n"
-                   "\n"
-                   "Print a friendly greeting. With no NAME, greets \"World\".\n",
-                   prog, prog, prog);
+    int rc = fprintf(stream,
+                     "Usage: %s [NAME]...\n"
+                     "       %s --version\n"
+                     "       %s --help\n"
+                     "\n"
+                     "Print a friendly greeting. With no NAME, greets \"World\".\n",
+                     prog, prog, prog);
+    return rc < 0 ? 2 : 0;
 }
 
 int main(int argc, char *argv[]) {
@@ -33,8 +35,7 @@ int main(int argc, char *argv[]) {
     if (argc >= 2) {
         const char *arg = argv[1];
         if (strcmp(arg, "--help") == 0 || strcmp(arg, "-h") == 0) {
-            print_usage(stdout, prog);
-            return 0;
+            return print_usage(stdout, prog);
         }
         if (strcmp(arg, "--version") == 0 || strcmp(arg, "-V") == 0) {
             if (printf("hello %s\n", hello_version()) < 0) {

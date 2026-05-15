@@ -50,7 +50,7 @@ jobs:
         run: cmake --build --preset ${{ matrix.preset }}
 
       - name: Test
-        run: ctest --preset default --test-dir build/${{ matrix.preset }} || ctest --test-dir build/${{ matrix.preset }} --output-on-failure
+        run: ctest --test-dir build/${{ matrix.preset }} --output-on-failure
 
   sanitizers:
     name: ASan + UBSan
@@ -108,3 +108,17 @@ jobs:
         with:
           name: coverage-report
           path: coverage.info
+
+  docs:
+    name: Doxygen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Doxygen
+        run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
+      - name: Build docs
+        run: doxygen docs/Doxyfile
+      - uses: actions/upload-artifact@v4
+        with:
+          name: api-docs
+          path: docs/html

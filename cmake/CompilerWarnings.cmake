@@ -60,11 +60,41 @@ function(hello_apply_warnings target)
 
     # Hardening flags useful on GCC / Clang in release builds.
     if(NOT MSVC)
+        # Pick the strongest _FORTIFY_SOURCE the toolchain accepts. =3 needs
+        # glibc >= 2.34 and GCC >= 12 / Clang >= 9.
+        if(NOT DEFINED HELLO_FORTIFY_LEVEL_CACHED)
+            include(CheckCSourceCompiles)
+            set(CMAKE_REQUIRED_FLAGS "-O1 -Werror -D_FORTIFY_SOURCE=3")
+            check_c_source_compiles("#include <string.h>
+int main(void){char b[8]; strcpy(b,\"hi\"); return b[0];}" HELLO_HAVE_FORTIFY3)
+            unset(CMAKE_REQUIRED_FLAGS)
+            if(HELLO_HAVE_FORTIFY3)
+                set(HELLO_FORTIFY_LEVEL_CACHED 3 CACHE INTERNAL "")
+            else()
+                set(HELLO_FORTIFY_LEVEL_CACHED 2 CACHE INTERNAL "")
+            endif()
+        endif()
         target_compile_definitions(${target} PRIVATE
-            $<$<NOT:$<CONFIG:Debug>>:_FORTIFY_SOURCE=2>
+            $<$<NOT:$<CONFIG:Debug>>:_FORTIFY_SOURCE=${HELLO_FORTIFY_LEVEL_CACHED}>
         )
         target_compile_options(${target} PRIVATE
             -fstack-protector-strong
+        )
+    endif()
+
+    # Link-time hardening: full RELRO + BIND_NOW + PIE for executables on ELF.
+    # Skipped on macOS (Mach-O) and Windows. Shared libs already get PIC via
+    # POSITION_INDEPENDENT_CODE; PIE is only meaningful for executables.
+    get_target_property(_target_type ${target} TYPE)
+    if(_target_type STREQUAL "EXECUTABLE"
+       AND CMAKE_SYSTEM_NAME STREQUAL "Linux"
+       AND NOT MSVC)
+        set_property(TARGET ${target} PROPERTY POSITION_INDEPENDENT_CODE ON)
+        target_link_options(${target} PRIVATE
+            -pie
+            -Wl,-z,relro
+            -Wl,-z,now
+            -Wl,-z,noexecstack
         )
     endif()
 endfunction()

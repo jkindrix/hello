@@ -6,7 +6,6 @@ cmake_minimum_required(VERSION 3.20)
 project(hello
     VERSION 1.0.0
     DESCRIPTION "A small, modern C 'Hello, World!' library and CLI."
-    HOMEPAGE_URL "https://example.invalid/hello"
     LANGUAGES C
 )
 
