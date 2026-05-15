@@ -99,9 +99,15 @@ jobs:
       - name: Configure
         run: cmake --preset debug
       - name: clang-tidy
+        # --extra-arg-before=-Wno-unknown-warning-option silences clang-tidy's
+        # objection to GCC-only flags (-Wduplicated-cond, -Wlogical-op, ...)
+        # that may be present in compile_commands.json when GCC configured
+        # the build.
         run: |
           find src tests examples -name '*.c' \
-            | xargs clang-tidy -p build/debug --warnings-as-errors=*
+            | xargs clang-tidy -p build/debug \
+                --extra-arg-before=-Wno-unknown-warning-option \
+                --warnings-as-errors=*
 
   coverage:
     name: Coverage

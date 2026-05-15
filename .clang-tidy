@@ -10,7 +10,29 @@ Checks: >
   -readability-magic-numbers,
   -readability-identifier-length,
   -bugprone-easily-swappable-parameters,
+  -bugprone-reserved-identifier,
+  -cert-dcl37-c,
+  -cert-dcl51-cpp,
+  -cert-err33-c,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
   -misc-include-cleaner
+
+# Disabled checks, with reasoning:
+#   bugprone-reserved-identifier (+ cert-dcl37-c, cert-dcl51-cpp aliases):
+#     Fires on _POSIX_C_SOURCE, the *standard* feature-test macro one must
+#     define to get POSIX prototypes, and on macro-local _a/_b temps in the
+#     test harness's CHECK_STR_EQ. Both uses are conventional.
+#   cert-err33-c:
+#     Flags every diagnostic fprintf(stderr, ...) and printf() return value.
+#     For diagnostic logging the return is genuinely uninteresting; littering
+#     the codebase with (void) casts harms readability without catching real
+#     bugs. The CLI's *primary* stdout writes are still checked manually.
+#   clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling:
+#     Recommends C11 Annex K *_s functions (snprintf_s, memcpy_s, ...).
+#     Annex K is optional, not supported by glibc or most platform libcs,
+#     and is widely considered a failed standardization experiment. The
+#     code uses snprintf and memcpy with explicit, checked sizes, which is
+#     the correct portable practice.
 
 WarningsAsErrors: ''
 HeaderFilterRegex: '.*/(include|src|tests|examples)/.*'

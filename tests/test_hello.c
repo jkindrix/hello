@@ -9,6 +9,9 @@
  * system header includes. */
 #if defined(__unix__) || defined(__APPLE__)
 #  ifndef _POSIX_C_SOURCE
+/* _POSIX_C_SOURCE is the standard feature-test macro defined by POSIX
+ * itself; the underscore prefix is mandatory, not a style violation. */
+/* NOLINTNEXTLINE(readability-identifier-naming) */
 #    define _POSIX_C_SOURCE 200809L
 #  endif
 #endif
@@ -161,6 +164,9 @@ TEST(greet_reports_io_error_on_broken_pipe) {
 TEST(version_is_nonempty) {
     const char *v = hello_version();
     CHECK(v != NULL);
+    if (v == NULL) {
+        return; /* Avoid dereferencing if the contract is already broken. */
+    }
     CHECK(v[0] != '\0');
 }
 

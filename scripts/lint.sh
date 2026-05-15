@@ -23,4 +23,11 @@ if [ ${#files[@]} -eq 0 ]; then
     exit 0
 fi
 
-clang-tidy -p "$BUILD_DIR" --warnings-as-errors='*' "${files[@]}"
+# -Wno-unknown-warning-option silences clang-tidy's complaint about
+# GCC-specific flags (-Wduplicated-cond, -Wlogical-op, ...) that get baked
+# into compile_commands.json when the project was configured with GCC.
+clang-tidy \
+    -p "$BUILD_DIR" \
+    --extra-arg-before=-Wno-unknown-warning-option \
+    --warnings-as-errors='*' \
+    "${files[@]}"

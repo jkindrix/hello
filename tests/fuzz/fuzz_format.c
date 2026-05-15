@@ -16,6 +16,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+/* libFuzzer mandates this exact symbol name. The forward declaration tames
+ * -Wmissing-prototypes; the NOLINT silences clang-tidy's case-style check,
+ * which we can't satisfy without breaking libFuzzer. */
+/* NOLINTNEXTLINE(readability-identifier-naming) */
+int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size);
+
+/* NOLINTNEXTLINE(readability-identifier-naming) */
 int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size) {
     /* Treat the input as a NUL-terminated name. Inject a NUL ourselves so the
      * fuzzer can't smuggle un-terminated bytes into the API. */
