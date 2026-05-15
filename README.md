@@ -113,7 +113,8 @@ treated as `"World"`. Buffers are always NUL-terminated on return.
 
 - Format: `scripts/format.sh` (runs `clang-format -i` on all sources).
 - Lint:   `scripts/lint.sh`   (runs `clang-tidy` against `compile_commands.json`).
-- Hooks:  see `.github/workflows/ci.yml` for the CI build/test matrix.
+- CI:     see `.github/workflows/ci.yml` for the build/test matrix, sanitizer,
+  lint, coverage, and Doxygen jobs.
 
 ## License
 

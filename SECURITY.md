@@ -22,11 +22,20 @@ we will coordinate a disclosure date with you and publish a patched release.
 
 ## Hardening
 
-The project ships with the following hardening features enabled by default in
-non-Debug builds:
+The project ships with the following hardening features:
 
-- `_FORTIFY_SOURCE=2`
-- `-fstack-protector-strong`
-- `-fvisibility=hidden` for shared builds
+Compile-time (non-Debug builds):
+- `_FORTIFY_SOURCE=3` when the toolchain supports it (glibc ≥ 2.34, GCC ≥ 12
+  or Clang ≥ 9), with automatic fallback to `_FORTIFY_SOURCE=2`. Detection is
+  done at configure time via `check_c_source_compiles`.
+- `-fstack-protector-strong`.
+- `-fvisibility=hidden` plus an explicit `HELLO_API` export macro, so only
+  intentionally-public symbols are visible from shared builds.
 
-CI exercises every change under AddressSanitizer + UndefinedBehaviorSanitizer.
+Link-time (Linux executables):
+- `-pie` (position-independent executables).
+- `-Wl,-z,relro -Wl,-z,now` (full RELRO + immediate symbol binding).
+- `-Wl,-z,noexecstack` (non-executable stack).
+
+CI exercises every change under AddressSanitizer + UndefinedBehaviorSanitizer
+with `halt_on_error=1` and `detect_leaks=1`.

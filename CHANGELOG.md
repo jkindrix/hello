@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- CTest CLI smoke-test regexes now accept `\r?\n` so they pass on Windows
+  text-mode stdout (previously anchored on bare `\n`, which never matched
+  `\r\n`).
+
+### Added
+- New CLI smoke test that exercises multiple positional NAME arguments.
+
 ### Changed
 - CLI: `--help` now propagates stdout I/O failures with exit code 2, matching
   `--version`'s behavior.
@@ -19,6 +27,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CI: add a `docs` job that builds the Doxygen site and uploads it as an
   artifact.
 - CMake: drop the placeholder `HOMEPAGE_URL`.
+- SECURITY.md: document the actual hardening set (FORTIFY=3 with =2 fallback,
+  PIE, full RELRO, BIND_NOW, noexecstack) instead of the stale FORTIFY=2 list.
+- README: clarify that the CI bullet refers to GitHub Actions, not git hooks.
 
 ## [1.0.0] - 2026-05-15
 
