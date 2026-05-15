@@ -1,12 +1,12 @@
-# Default reviewers for every change. Replace with your handles / teams.
-*                          @hello-maintainers
+# Default reviewer for every change.
+*                          @jkindrix
 
-# Build & CI changes carry blast radius; require the platform team.
-/CMakeLists.txt            @hello-maintainers @hello-platform
-/CMakePresets.json         @hello-maintainers @hello-platform
-/cmake/                    @hello-maintainers @hello-platform
-/.github/workflows/        @hello-maintainers @hello-platform
+# Build & CI changes carry blast radius.
+/CMakeLists.txt            @jkindrix
+/CMakePresets.json         @jkindrix
+/cmake/                    @jkindrix
+/.github/workflows/        @jkindrix
 
 # Security-sensitive surfaces.
-/SECURITY.md               @hello-maintainers @hello-security
-/include/hello/            @hello-maintainers @hello-security
+/SECURITY.md               @jkindrix
+/include/hello/            @jkindrix

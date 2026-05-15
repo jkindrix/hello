@@ -1,6 +1,6 @@
 # hello
 
-[![CI](https://github.com/your-org/hello/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/hello/actions/workflows/ci.yml)
+[![CI](https://github.com/jkindrix/hello/actions/workflows/ci.yml/badge.svg)](https://github.com/jkindrix/hello/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![C17](https://img.shields.io/badge/C-17-informational.svg)](https://www.iso.org/standard/74528.html)
 [![CMake >= 3.20](https://img.shields.io/badge/CMake-%E2%89%A5%203.20-informational.svg)](CMakeLists.txt)
