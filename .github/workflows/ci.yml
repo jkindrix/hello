@@ -109,6 +109,47 @@ jobs:
           name: coverage-report
           path: coverage.info
 
+  install-consumer:
+    name: Install + downstream find_package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: seanmiddleditch/gha-setup-ninja@v5
+      - name: Configure + build hello
+        run: |
+          cmake --preset release
+          cmake --build --preset release
+      - name: Install to staging prefix
+        run: cmake --install build/release --prefix "$RUNNER_TEMP/prefix"
+      - name: Verify pkg-config metadata
+        run: |
+          PKG_CONFIG_PATH="$RUNNER_TEMP/prefix/lib/pkgconfig" pkg-config --modversion hello
+          PKG_CONFIG_PATH="$RUNNER_TEMP/prefix/lib/pkgconfig" pkg-config --cflags --libs hello
+      - name: Build downstream consumer
+        run: |
+          cmake -S tests/consumer -B "$RUNNER_TEMP/consumer-build" -G Ninja \
+            -DCMAKE_PREFIX_PATH="$RUNNER_TEMP/prefix"
+          cmake --build "$RUNNER_TEMP/consumer-build"
+      - name: Run downstream consumer tests
+        run: ctest --test-dir "$RUNNER_TEMP/consumer-build" --output-on-failure
+
+  fuzz:
+    name: libFuzzer smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: seanmiddleditch/gha-setup-ninja@v5
+      - name: Install clang
+        run: sudo apt-get update && sudo apt-get install -y clang
+      - name: Configure with fuzzers
+        env:
+          CC: clang
+        run: cmake -S . -B build/fuzz -G Ninja -DCMAKE_BUILD_TYPE=Debug -DHELLO_BUILD_FUZZERS=ON
+      - name: Build fuzz target
+        run: cmake --build build/fuzz --target fuzz_format
+      - name: Run fuzzer briefly
+        run: ./build/fuzz/tests/fuzz/fuzz_format -max_total_time=20 -print_final_stats=1
+
   docs:
     name: Doxygen
     runs-on: ubuntu-latest

@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- `pkg-config` integration: a relocatable `hello.pc` is generated and
+  installed to `<libdir>/pkgconfig`. The file uses `${pcfiledir}` so it works
+  after the install tree is moved.
+- Downstream consumer test under `tests/consumer/`: a minimal external
+  project that `find_package(hello)`-s and links `hello::hello`. A new
+  `install-consumer` CI job installs the library to a staging prefix,
+  verifies `pkg-config --cflags --libs hello`, and builds + runs the
+  consumer end-to-end.
+- libFuzzer harness under `tests/fuzz/` plus a `HELLO_BUILD_FUZZERS` CMake
+  option (Clang-only) and a `fuzz` CI job that runs `fuzz_format` for ~20s
+  on every push.
+- `.github/dependabot.yml` to keep CI actions current.
+- `.github/CODEOWNERS`, `PULL_REQUEST_TEMPLATE.md`, and issue templates
+  (bug, feature, security-disclosure pointer).
+- README status badges (CI, license, C standard, CMake version) and a
+  "Consuming from non-CMake build systems" section.
+
 ### Fixed
 - CTest CLI smoke-test regexes now accept `\r?\n` so they pass on Windows
   text-mode stdout (previously anchored on bare `\n`, which never matched

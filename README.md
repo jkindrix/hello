@@ -1,5 +1,10 @@
 # hello
 
+[![CI](https://github.com/your-org/hello/actions/workflows/ci.yml/badge.svg)](https://github.com/your-org/hello/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![C17](https://img.shields.io/badge/C-17-informational.svg)](https://www.iso.org/standard/74528.html)
+[![CMake >= 3.20](https://img.shields.io/badge/CMake-%E2%89%A5%203.20-informational.svg)](CMakeLists.txt)
+
 A small, modern C "Hello, World!" — built as a reference for how to lay out and
 operate a production-grade C project. It is intentionally tiny so the
 *structure* is the lesson.
@@ -78,6 +83,15 @@ add_subdirectory(third_party/hello)
 target_link_libraries(my_app PRIVATE hello::hello)
 ```
 
+## Consuming from non-CMake build systems
+
+A `pkg-config` file is installed alongside the CMake config:
+
+```sh
+pkg-config --cflags --libs hello
+cc my_app.c $(pkg-config --cflags --libs hello) -o my_app
+```
+
 ## Project layout
 
 ```
@@ -87,7 +101,7 @@ hello/
 ├── cmake/                   Helper modules (warnings, sanitizers, packaging)
 ├── include/hello/           Public headers (installed)
 ├── src/                     Library implementation + CLI entry point
-├── tests/                   Unit and CLI smoke tests
+├── tests/                   Unit, CLI smoke, fuzz, and downstream-consumer tests
 ├── examples/                Minimal usage example
 ├── docs/                    Doxygen configuration
 ├── scripts/                 Developer scripts (format, lint)

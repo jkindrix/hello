@@ -47,6 +47,7 @@ option(HELLO_ENABLE_UBSAN   "Enable UndefinedBehaviorSanitizer" OFF)
 option(HELLO_ENABLE_MSAN    "Enable MemorySanitizer (clang only)" OFF)
 option(HELLO_ENABLE_TSAN    "Enable ThreadSanitizer"     OFF)
 option(HELLO_ENABLE_COVERAGE "Enable code-coverage instrumentation" OFF)
+option(HELLO_BUILD_FUZZERS  "Build libFuzzer-based fuzz targets (Clang only)" OFF)
 option(BUILD_SHARED_LIBS    "Build libhello as a shared library" OFF)
 
 # --------------------------------------------------------------------------- #
@@ -120,6 +121,10 @@ if(HELLO_BUILD_TESTS)
     add_subdirectory(tests)
 endif()
 
+if(HELLO_BUILD_FUZZERS)
+    add_subdirectory(tests/fuzz)
+endif()
+
 # --------------------------------------------------------------------------- #
 # Install / packaging
 # --------------------------------------------------------------------------- #
@@ -162,6 +167,23 @@ install(FILES
     "${CMAKE_CURRENT_BINARY_DIR}/helloConfig.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/helloConfigVersion.cmake"
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/hello
+)
+
+# pkg-config integration for non-CMake consumers. The .pc file is made
+# relocatable by deriving prefix from ${pcfiledir} at runtime; the relative
+# distance from <libdir>/pkgconfig back to <prefix> is computed at configure
+# time so this works for lib/, lib64/, and Debian multiarch layouts alike.
+file(RELATIVE_PATH HELLO_PC_RELATIVE_PREFIX
+    "${CMAKE_INSTALL_FULL_LIBDIR}/pkgconfig"
+    "${CMAKE_INSTALL_PREFIX}"
+)
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/hello.pc.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/hello.pc"
+    @ONLY
+)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/hello.pc"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )
 
 # --------------------------------------------------------------------------- #
