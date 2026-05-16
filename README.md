@@ -212,6 +212,9 @@ Common consumer failure modes and their fixes:
 - Hooks:  `scripts/install-hooks.sh` wires `core.hooksPath` to `.githooks/`,
   enabling a `clang-format --dry-run -Werror` check on staged C sources at
   commit time.
+- Coverage: `scripts/coverage.sh` runs the same coverage + threshold
+  check the CI workflow does, auto-detecting your lcov major version
+  (1.x or 2.x) and picking compatible flags.
 - Fuzz:   `cmake --build build/fuzz --target fuzz_format fuzz_greet` then
   `./build/fuzz/tests/fuzz/fuzz_format tests/fuzz/corpus -dict=tests/fuzz/hello.dict -max_total_time=60`.
 

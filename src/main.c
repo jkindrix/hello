@@ -24,6 +24,7 @@
  */
 #include "hello/hello.h"
 
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -57,6 +58,16 @@ static int print_usage(FILE *stream, const char *prog) {
 
 int main(int argc, char *argv[]) {
     const char *prog = (argc > 0 && argv[0] != NULL) ? argv[0] : "hello";
+
+#ifdef SIGPIPE
+    /* Ignore SIGPIPE so a broken pipe surfaces as fprintf returning -1, then
+     * HELLO_ERR_IO from the library, then exit 2 -- the documented contract.
+     * Without this, the kernel kills the process with signal 13 and the
+     * shell reports exit 141, which would violate the README's exit-code
+     * table. <signal.h> is C standard; SIGPIPE is POSIX-only, so the macro
+     * check skips this on Windows where it isn't defined. */
+    signal(SIGPIPE, SIG_IGN);
+#endif
 
     /* Recognize options only if they appear before any positional argument.
      * A bare "--" terminates option processing; subsequent arguments are

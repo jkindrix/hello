@@ -124,6 +124,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   percentage cannot be parsed.
 
 ### Fixed
+- **CLI's documented exit-code 2 for I/O errors only held when the caller
+  masked `SIGPIPE`.** In a real shell pipeline (`hello Ada | head -n 0`)
+  the kernel killed the writer with `SIGPIPE` and the shell reported
+  exit 141. `main()` now installs `signal(SIGPIPE, SIG_IGN)` on POSIX
+  (guarded by `#ifdef SIGPIPE` so Windows builds are unaffected), so
+  the broken-pipe path traverses `fprintf → -1`, `HELLO_ERR_IO`, exit 2
+  as the README claims. The `cli_broken_pipe_exit_code` CTest entry
+  no longer pre-masks `SIGPIPE` either, so it now exercises the same
+  scenario a scripting consumer would.
+
+### Added
+- `scripts/coverage.sh`: version-aware local coverage runner. Auto-
+  detects lcov 1.x vs 2.x and applies the matching flag set so
+  contributors on older distros (Debian 12 still ships lcov 1.16) can
+  reproduce the CI coverage gate without hand-editing the workflow
+  commands. Enforces the same 90 % line-coverage floor.
+
+### Fixed (continued)
 - **CLI exit-code contract was wrong for library-surfaced I/O errors.**
   `hello_greet` returning `HELLO_ERR_IO` previously caused the CLI to
   exit 1, but the README's exit-code table documented 2 for "I/O error

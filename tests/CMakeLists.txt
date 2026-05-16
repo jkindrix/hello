@@ -67,9 +67,14 @@ if(CMAKE_HOST_UNIX)
 endif()
 
 # Broken-pipe path: HELLO_ERR_IO from hello_greet must surface as CLI exit
-# code 2 (the I/O-error code), not 1. The shell wrapper closes the pipe's
-# read end so the CLI's first write fails. SIGPIPE is ignored or the kernel
-# would kill the writer before fprintf returns.
+# code 2 (the documented I/O-error code), not 1 (logic error) and not 141
+# (kernel killing the process with SIGPIPE). The shell wrapper closes the
+# pipe's read end so the CLI's first write fails.
+#
+# Deliberately *no* `trap '' PIPE` here -- main() now installs
+# signal(SIGPIPE, SIG_IGN) itself, so this asserts the real-world shell
+# scenario (default SIGPIPE disposition on entry, CLI handles it
+# internally), not a masked-by-the-wrapper variant.
 #
 # Linux-only, not generic Unix: macOS lacks `stdbuf` (it's GNU coreutils,
 # not BSD) and its BSD `head` rejects `head -n 0` as "illegal line count".
@@ -78,7 +83,7 @@ endif()
 # CLI-side complement.
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_test(NAME cli_broken_pipe_exit_code
-        COMMAND bash -c "trap '' PIPE; stdbuf -o0 $<TARGET_FILE:hello_cli> Ada | head -n 0; test \${PIPESTATUS[0]} -eq 2"
+        COMMAND bash -c "stdbuf -o0 $<TARGET_FILE:hello_cli> Ada | head -n 0; test \${PIPESTATUS[0]} -eq 2"
     )
     set_tests_properties(cli_broken_pipe_exit_code PROPERTIES TIMEOUT 10)
 endif()
