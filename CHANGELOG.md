@@ -8,6 +8,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Test harness gains a `REQUIRE(cond)` macro that short-circuits the
+  enclosing test on failure. Replaces the latent crash risk in
+  `greet_writes_expected_bytes` and `status_string_covers_all_codes`,
+  where a contract regression would have crashed the whole harness
+  instead of producing a clean FAIL diagnostic.
+- Sanitizer runtime options are now baked into CTest properties (via
+  `set_property(TEST ... APPEND PROPERTY ENVIRONMENT ...)` keyed on
+  `HELLO_ENABLE_ASAN` / `_UBSAN` / `_TSAN` / `_MSAN`). Local
+  `ctest --preset asan` now sees the same strictness as the CI job; the
+  CI env blocks no longer disagree with the local surface.
+- MemorySanitizer CI job (Clang-only). Closes the gap where
+  `HELLO_ENABLE_MSAN` was wired but never exercised.
+- Second fuzz harness `fuzz_greet` exercising the `hello_greet`
+  streaming path; `LLVMFuzzerInitialize` opens the null device once and
+  the harness reuses it. The full public surface is now fuzzed.
+- libFuzzer dictionary `tests/fuzz/hello.dict` containing the format
+  string's literal tokens, so the mutator can splice them directly.
+  Both fuzz CI jobs pass `-dict=tests/fuzz/hello.dict`.
+- Doc-coverage policy test `tests/check_doxygen_coverage.sh` plus a
+  CTest entry. Asserts that every `HELLO_API` declaration in
+  `include/hello/hello.h` is preceded by a Doxygen `/** ... */` block.
+  Same shape as `check_exports.sh` — the contract is in writing and the
+  test makes drift visible immediately.
+- `CODE_OF_CONDUCT.md` adopting Contributor Covenant v2.1 by reference,
+  with private-reporting and enforcement-ladder pointers.
+- `SUPPORT.md` mapping question type to channel (issues vs. Discussions
+  vs. private security advisory).
+- `CONTRIBUTING.md` "Governance" section stating single-maintainer
+  policy, merge requirements, review SLA, and release cadence.
+- `.github/ISSUE_TEMPLATE/config.yml` adds Discussions and SUPPORT links
+  alongside the existing security-advisory redirect.
+- README "Example output" block under "Build & run".
+- README "Troubleshooting" table covering the five common consumer
+  failure modes (`find_package` not found, MSVC shared linkage without
+  `HELLO_USE_SHARED`, missing `PKG_CONFIG_PATH`, sanitizer/ASLR
+  collision, missing Clang runtime package).
+- README fuzz section now describes both harnesses and explicitly notes
+  why the input space they explore is small (no parser; format string
+  is a compile-time constant).
 - CLI `--` end-of-options terminator so names beginning with `-` can be
   greeted (`hello -- --version` greets the literal name `--version`).
   Covered by two new CTest cases.

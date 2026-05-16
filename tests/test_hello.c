@@ -39,6 +39,21 @@ static int g_tests = 0;
         }                                                                      \
     } while (0)
 
+/* REQUIRE is CHECK that short-circuits the rest of the test body. Use it for
+ * preconditions whose violation would make subsequent assertions dereference
+ * NULL or read uninitialized memory; without it, a contract regression
+ * crashes the whole harness instead of producing a clean FAIL diagnostic. */
+#define REQUIRE(cond)                                                          \
+    do {                                                                       \
+        if (!(cond)) {                                                         \
+            fprintf(stderr,                                                    \
+                    "  FAIL: %s:%d: %s (required; aborting test)\n",           \
+                    __FILE__, __LINE__, #cond);                                \
+            ++g_failures;                                                      \
+            return;                                                            \
+        }                                                                      \
+    } while (0)
+
 #define CHECK_STR_EQ(a, b)                                                     \
     do {                                                                       \
         const char *_a = (a);                                                  \
@@ -147,10 +162,14 @@ TEST(greet_writes_expected_bytes) {
         return;
     }
     hello_status st = hello_greet(fp, "Grace");
-    CHECK(st == HELLO_OK);
+    /* REQUIRE: if the write failed the rest of the test reads from an empty
+     * stream and produces a confusing "expected ..., got" diagnostic instead
+     * of the actual cause. */
+    REQUIRE(st == HELLO_OK);
     rewind(fp);
     char buf[64] = {0};
     size_t n = fread(buf, 1, sizeof buf - 1, fp);
+    REQUIRE(n > 0);
     buf[n] = '\0';
     CHECK_STR_EQ(buf, "Hello, Grace!\n");
     fclose(fp);
@@ -187,20 +206,37 @@ TEST(greet_reports_io_error_on_broken_pipe) {
 
 TEST(version_is_nonempty) {
     const char *v = hello_version();
-    CHECK(v != NULL);
-    if (v == NULL) {
-        return; /* Avoid dereferencing if the contract is already broken. */
-    }
+    REQUIRE(v != NULL);
     CHECK(v[0] != '\0');
+}
+
+/* Probe hello_status_string for a given code: REQUIRE non-NULL, then CHECK
+ * non-empty. Keeps each case clean while still failing safely if the
+ * implementation contract ever regresses. */
+static void check_status_string(hello_status code, const char *label) {
+    const char *s = hello_status_string(code);
+    if (s == NULL) {
+        fprintf(stderr,
+                "  FAIL: hello_status_string(%s) returned NULL (required)\n",
+                label);
+        ++g_failures;
+        return;
+    }
+    if (s[0] == '\0') {
+        fprintf(stderr,
+                "  FAIL: hello_status_string(%s) returned empty string\n",
+                label);
+        ++g_failures;
+    }
 }
 
 TEST(status_string_covers_all_codes) {
     CHECK_STR_EQ(hello_status_string(HELLO_OK), "ok");
-    CHECK(hello_status_string(HELLO_ERR_INVALID_ARG)[0] != '\0');
-    CHECK(hello_status_string(HELLO_ERR_IO)[0] != '\0');
-    CHECK(hello_status_string(HELLO_ERR_OVERFLOW)[0] != '\0');
+    check_status_string(HELLO_ERR_INVALID_ARG, "HELLO_ERR_INVALID_ARG");
+    check_status_string(HELLO_ERR_IO,          "HELLO_ERR_IO");
+    check_status_string(HELLO_ERR_OVERFLOW,    "HELLO_ERR_OVERFLOW");
     /* Unknown codes still produce a non-empty string. */
-    CHECK(hello_status_string((hello_status)999)[0] != '\0');
+    check_status_string((hello_status)999, "(hello_status)999");
 }
 
 int main(void) {

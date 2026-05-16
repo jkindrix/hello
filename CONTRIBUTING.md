@@ -14,6 +14,25 @@ this template; the CI pipeline assumes both are in place:
 - **Settings → Code security → Code scanning: enable CodeQL.** Required
   before `.github/workflows/codeql.yml` can upload SARIF results.
 
+## Governance
+
+This is a single-maintainer project ([@jkindrix](https://github.com/jkindrix)).
+Pull requests are merged when:
+
+1. CI is green on every required job (the full workflow under
+   `.github/workflows/ci.yml` plus the CodeQL workflow).
+2. The maintainer has approved the PR.
+3. There are no unresolved review threads.
+
+The maintainer reviews PRs on a best-effort basis; expect a first response
+within a week, occasionally longer for non-trivial changes. Pinging once
+after seven quiet days is welcome. There is no formal release cadence:
+releases are cut when the `[Unreleased]` section of [CHANGELOG.md](CHANGELOG.md)
+accumulates a meaningful set of changes, or when a critical fix lands.
+
+Conduct in any project space (issues, PRs, discussions) is governed by the
+[Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Ground rules
 
 - **Discuss before large changes.** Open an issue first for anything beyond a

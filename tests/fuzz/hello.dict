@@ -1,0 +1,11 @@
+# libFuzzer token dictionary for hello_format / hello_greet.
+# Seeded with the literal substrings the formatter emits so the mutator can
+# splice and align them faster than discovering each byte at a time. Pass
+# with `-dict=tests/fuzz/hello.dict`.
+
+"Hello, "
+"!"
+"World"
+"\x00"
+" "
+","

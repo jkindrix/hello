@@ -3,8 +3,13 @@
 # a warning on non-Clang toolchains; reaching this file means the check has
 # already passed.
 
-add_executable(fuzz_format fuzz_format.c)
-target_link_libraries(fuzz_format PRIVATE hello::hello)
-target_compile_options(fuzz_format PRIVATE -fsanitize=fuzzer,address,undefined)
-target_link_options(fuzz_format    PRIVATE -fsanitize=fuzzer,address,undefined)
-hello_apply_warnings(fuzz_format)
+function(hello_add_fuzz_target name)
+    add_executable(${name} ${name}.c)
+    target_link_libraries(${name} PRIVATE hello::hello)
+    target_compile_options(${name} PRIVATE -fsanitize=fuzzer,address,undefined)
+    target_link_options(${name}    PRIVATE -fsanitize=fuzzer,address,undefined)
+    hello_apply_warnings(${name})
+endfunction()
+
+hello_add_fuzz_target(fuzz_format)
+hello_add_fuzz_target(fuzz_greet)

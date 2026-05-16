@@ -36,6 +36,21 @@ cmake --build --preset debug
 ./build/debug/hello --version
 ```
 
+Example output:
+
+```text
+$ ./build/debug/hello
+Hello, World!
+
+$ ./build/debug/hello Ada Grace "Margaret Hamilton"
+Hello, Ada!
+Hello, Grace!
+Hello, Margaret Hamilton!
+
+$ ./build/debug/hello --version
+hello 1.0.0
+```
+
 Other presets:
 
 ```sh
@@ -178,6 +193,18 @@ private and may change without notice. The `shared-build` CI job runs a
 `SOVERSION` is set to the major version, so `libhello.so.1` is the binary
 contract for the 1.x series.
 
+## Troubleshooting
+
+Common consumer failure modes and their fixes:
+
+| Symptom | Cause | Fix |
+| --- | --- | --- |
+| `find_package(hello)` reports "not found". | The install prefix isn't on CMake's search path. | Pass `-DCMAKE_PREFIX_PATH=<your install prefix>` to your project's `cmake` configure, or set `hello_DIR` to the directory containing `helloConfig.cmake`. |
+| MSVC shared link fails with unresolved `hello_*` externs. | Consumer compiled without the `dllimport` annotation. | Define `HELLO_USE_SHARED` before `#include <hello/hello.h>`. CMake's `find_package(hello)` does this automatically; non-CMake consumers must do it themselves. |
+| `pkg-config --cflags --libs hello` prints "not found". | Install prefix's pkgconfig dir isn't on `PKG_CONFIG_PATH`. | `export PKG_CONFIG_PATH=<prefix>/lib/pkgconfig:$PKG_CONFIG_PATH`. The `.pc` file itself is relocatable, so it doesn't matter where you put the install. |
+| Sanitizer build aborts with `unexpected memory mapping`. | Linux kernel ≥ 6.x with Clang ≤ 15: ASLR entropy exceeds the sanitizer shadow region. | Use Clang ≥ 16 (`CC=clang-19 cmake --preset asan`), or lower the entropy: `sudo sysctl -w vm.mmap_rnd_bits=28`. Detailed in [CONTRIBUTING.md](CONTRIBUTING.md). |
+| Fuzz target fails to link with `libclang_rt.fuzzer-*.a: No such file`. | Debian splits Clang's sanitizer/fuzzer runtimes into a separate package. | `sudo apt install -y libclang-rt-19-dev` (or the version matching your `clang`). |
+
 ## Development
 
 - Format: `scripts/format.sh` (runs `clang-format -i` on all sources).
@@ -185,8 +212,16 @@ contract for the 1.x series.
 - Hooks:  `scripts/install-hooks.sh` wires `core.hooksPath` to `.githooks/`,
   enabling a `clang-format --dry-run -Werror` check on staged C sources at
   commit time.
-- Fuzz:   `cmake --build build/fuzz --target fuzz_format` then
-  `./build/fuzz/tests/fuzz/fuzz_format tests/fuzz/corpus -max_total_time=60`.
+- Fuzz:   `cmake --build build/fuzz --target fuzz_format fuzz_greet` then
+  `./build/fuzz/tests/fuzz/fuzz_format tests/fuzz/corpus -dict=tests/fuzz/hello.dict -max_total_time=60`.
+
+  Two harnesses cover the full public surface: `fuzz_format` exercises
+  `hello_format` (the snprintf-into-buffer path) and `fuzz_greet` exercises
+  `hello_greet` (the FILE*-streaming path). The library has no parser and
+  the format string is a compile-time constant, so the input space these
+  harnesses explore is bounded — but the harnesses exist so the *pattern* is
+  visible when a future contributor adds a function that takes
+  attacker-controlled bytes.
 - CI:     see `.github/workflows/ci.yml` for the build/test matrix, sanitizer
   (ASan+UBSan, TSan), lint, coverage, fuzz, downstream-consumer, and Doxygen
   jobs.

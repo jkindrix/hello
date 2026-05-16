@@ -69,6 +69,28 @@ jobs:
           ASAN_OPTIONS: detect_leaks=1:strict_string_checks=1:halt_on_error=1
           UBSAN_OPTIONS: print_stacktrace=1:halt_on_error=1
 
+  msan:
+    name: MemorySanitizer
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: seanmiddleditch/gha-setup-ninja@v5
+      - name: Install clang
+        run: sudo apt-get update && sudo apt-get install -y clang
+      - name: Configure
+        env:
+          CC: clang
+        run: cmake -S . -B build/msan -G Ninja
+                   -DCMAKE_BUILD_TYPE=Debug
+                   -DHELLO_ENABLE_MSAN=ON
+      - name: Build
+        run: cmake --build build/msan
+      - name: Test
+        # MSan environment is baked into the test properties; do not also set
+        # MSAN_OPTIONS here or we'd be re-asserting the same surface in two
+        # places (the thing we just fixed by baking it in).
+        run: ctest --test-dir build/msan --output-on-failure
+
   tsan:
     name: ThreadSanitizer
     runs-on: ubuntu-latest
@@ -199,11 +221,18 @@ jobs:
         env:
           CC: clang
         run: cmake -S . -B build/fuzz -G Ninja -DCMAKE_BUILD_TYPE=Debug -DHELLO_BUILD_FUZZERS=ON
-      - name: Build fuzz target
-        run: cmake --build build/fuzz --target fuzz_format
-      - name: Run fuzzer briefly (with seed corpus)
+      - name: Build fuzz targets
+        run: cmake --build build/fuzz --target fuzz_format fuzz_greet
+      - name: Run fuzz_format (with seed corpus + dictionary)
         run: |
           ./build/fuzz/tests/fuzz/fuzz_format tests/fuzz/corpus \
+              -dict=tests/fuzz/hello.dict \
+              -max_total_time=20 \
+              -print_final_stats=1
+      - name: Run fuzz_greet (same corpus + dictionary, streaming path)
+        run: |
+          ./build/fuzz/tests/fuzz/fuzz_greet tests/fuzz/corpus \
+              -dict=tests/fuzz/hello.dict \
               -max_total_time=20 \
               -print_final_stats=1
 

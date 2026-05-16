@@ -67,3 +67,42 @@ if(BUILD_SHARED_LIBS AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
     )
     set_tests_properties(symbol_export_check PROPERTIES TIMEOUT 10)
 endif()
+
+# Policy test: every HELLO_API declaration in the public header must carry a
+# Doxygen comment. Same shape as symbol_export_check: the contract lives in
+# the README's "Versioning & ABI stability" section, and this test makes a
+# future drift visible immediately rather than at the next Doxygen build.
+if(CMAKE_HOST_UNIX)
+    add_test(NAME doxygen_coverage_check
+        COMMAND bash
+            "${CMAKE_CURRENT_SOURCE_DIR}/check_doxygen_coverage.sh"
+            "${CMAKE_SOURCE_DIR}/include/hello/hello.h"
+    )
+    set_tests_properties(doxygen_coverage_check PROPERTIES TIMEOUT 10)
+endif()
+
+# Bake sanitizer runtime options into every test so local `ctest` and the CI
+# job see identical strictness. Previously these lived only in the CI env
+# blocks; two developers running the same preset could otherwise get
+# different leak-detection / halt-on-error behavior.
+get_property(_hello_all_tests DIRECTORY PROPERTY TESTS)
+if(HELLO_ENABLE_ASAN OR HELLO_ENABLE_UBSAN)
+    set(_asan_env "ASAN_OPTIONS=detect_leaks=1:strict_string_checks=1:halt_on_error=1")
+    set(_ubsan_env "UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1")
+    foreach(_t IN LISTS _hello_all_tests)
+        set_property(TEST ${_t} APPEND PROPERTY
+            ENVIRONMENT "${_asan_env}" "${_ubsan_env}")
+    endforeach()
+endif()
+if(HELLO_ENABLE_TSAN)
+    foreach(_t IN LISTS _hello_all_tests)
+        set_property(TEST ${_t} APPEND PROPERTY
+            ENVIRONMENT "TSAN_OPTIONS=halt_on_error=1:second_deadlock_stack=1")
+    endforeach()
+endif()
+if(HELLO_ENABLE_MSAN)
+    foreach(_t IN LISTS _hello_all_tests)
+        set_property(TEST ${_t} APPEND PROPERTY
+            ENVIRONMENT "MSAN_OPTIONS=halt_on_error=1:print_stats=0")
+    endforeach()
+endif()
