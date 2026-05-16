@@ -94,6 +94,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - README: Doxygen `@file` blocks on `src/hello.c` and `src/main.c`.
 - CONTRIBUTING: one-time maintainer-setup note covering the
   GitHub-Pages source toggle and CodeQL enablement.
+- `scripts/coverage.sh`: version-aware local coverage runner. Auto-
+  detects lcov 1.x vs 2.x and applies the matching flag set so
+  contributors on older distros (Debian 12 still ships lcov 1.16) can
+  reproduce the CI coverage gate without hand-editing the workflow
+  commands. Enforces the same 90 % line-coverage floor.
 
 ### Changed
 - Split the `docs` workflow job into a build-only `docs` job (runs on
@@ -133,15 +138,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   as the README claims. The `cli_broken_pipe_exit_code` CTest entry
   no longer pre-masks `SIGPIPE` either, so it now exercises the same
   scenario a scripting consumer would.
-
-### Added
-- `scripts/coverage.sh`: version-aware local coverage runner. Auto-
-  detects lcov 1.x vs 2.x and applies the matching flag set so
-  contributors on older distros (Debian 12 still ships lcov 1.16) can
-  reproduce the CI coverage gate without hand-editing the workflow
-  commands. Enforces the same 90 % line-coverage floor.
-
-### Fixed (continued)
 - **CLI exit-code contract was wrong for library-surfaced I/O errors.**
   `hello_greet` returning `HELLO_ERR_IO` previously caused the CLI to
   exit 1, but the README's exit-code table documented 2 for "I/O error
@@ -163,7 +159,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `@jkindrix` GitHub mentions in CONTRIBUTING.md and CODE_OF_CONDUCT.md
   are now wrapped in backticks so Doxygen doesn't interpret them as
   commands (it parses bare `@name` as `\name`).
-
 - CTest CLI smoke-test regexes now accept `\r?\n` so they pass on
   Windows text-mode stdout (previously anchored on bare `\n`).
 
