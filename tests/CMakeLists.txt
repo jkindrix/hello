@@ -118,6 +118,12 @@ endif()
 # job see identical strictness. Previously these lived only in the CI env
 # blocks; two developers running the same preset could otherwise get
 # different leak-detection / halt-on-error behavior.
+#
+# Footgun: this enumerates tests defined in *this* directory only, and only
+# those defined *above* this line. If a future contributor adds an
+# `add_subdirectory(more_tests)` below here, those tests won't inherit the
+# sanitizer environment. Either move them above this block or wrap their
+# add_test calls in a function that applies the same set_property pass.
 get_property(_hello_all_tests DIRECTORY PROPERTY TESTS)
 if(HELLO_ENABLE_ASAN OR HELLO_ENABLE_UBSAN)
     set(_asan_env "ASAN_OPTIONS=detect_leaks=1:strict_string_checks=1:halt_on_error=1")

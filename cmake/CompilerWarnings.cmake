@@ -62,6 +62,10 @@ function(hello_apply_warnings target)
     if(NOT MSVC)
         # Pick the strongest _FORTIFY_SOURCE the toolchain accepts. =3 needs
         # glibc >= 2.34 and GCC >= 12 / Clang >= 9.
+        # The detection result is cached as HELLO_FORTIFY_LEVEL_CACHED; if you
+        # swap toolchains (e.g. CC=gcc -> CC=clang) wipe the build directory
+        # to force re-detection -- CMake will not invalidate the cached value
+        # on a CC change alone.
         if(NOT DEFINED HELLO_FORTIFY_LEVEL_CACHED)
             include(CheckCSourceCompiles)
             set(CMAKE_REQUIRED_FLAGS "-O1 -Werror -D_FORTIFY_SOURCE=3")

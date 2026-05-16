@@ -151,45 +151,17 @@ jobs:
       - run: cmake --preset coverage
       - run: cmake --build --preset coverage
       - run: ctest --test-dir build/coverage --output-on-failure
-      - name: Collect coverage
-        # lcov 2.x flag notes:
-        #   --ignore-errors mismatch  : gcov reports end-lines that don't
-        #     match the function's source location when a function is
-        #     defined inside a macro expansion (the harness's TEST() macro).
-        #     2.x treats this as an error; 1.x didn't.
-        #   --ignore-errors unused    : `lcov --remove` 2.x errors if a
-        #     glob matches no files. `/usr/*` is defensive and may not
-        #     match on every runner image.
-        #   --rc branch_coverage=1    : 2.x renamed lcov_branch_coverage.
-        run: |
-          lcov --capture --directory build/coverage --output-file coverage.info \
-               --ignore-errors mismatch \
-               --rc branch_coverage=1
-          lcov --remove coverage.info '/usr/*' '*/tests/*' \
-               --ignore-errors unused \
-               --output-file coverage.info
-          lcov --list coverage.info
-      - name: Enforce minimum line coverage
+      - name: Collect + enforce coverage
+        # Delegates to scripts/coverage.sh so the lcov flag surface (which
+        # differs between lcov 1.x and 2.x) is defined in exactly one place
+        # and contributors running locally see the same logic CI uses.
         env:
           MIN_LINE_COVERAGE: '90'
-        run: |
-          # Extract overall line coverage % from lcov --summary output.
-          # lcov prints "  lines......: 95.5% (160 of 168 lines)"; match the
-          # leading "lines" label, strip the % off the second field.
-          pct=$(lcov --summary coverage.info 2>&1 \
-                | awk '/^ *lines\.+:/ {gsub("%",""); print $2; exit}')
-          if [ -z "$pct" ]; then
-            echo "::error::could not parse line coverage from lcov --summary"
-            exit 1
-          fi
-          echo "line coverage: ${pct}% (floor: ${MIN_LINE_COVERAGE}%)"
-          awk -v p="$pct" -v f="$MIN_LINE_COVERAGE" \
-              'BEGIN { exit (p+0 >= f+0) ? 0 : 1 }' \
-            || { echo "::error::line coverage ${pct}% < ${MIN_LINE_COVERAGE}%"; exit 1; }
+        run: scripts/coverage.sh build/coverage
       - uses: actions/upload-artifact@v4
         with:
           name: coverage-report
-          path: coverage.info
+          path: build/coverage/coverage.info
 
   shared-build:
     name: Shared library + symbol-export check
