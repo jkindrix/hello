@@ -63,6 +63,24 @@ cmake --preset asan && cmake --build --preset asan
 ctest --preset asan
 ```
 
+### Toolchain version drift between local and CI
+
+CI runs against the tools shipped on GitHub's hosted runners
+(`ubuntu-latest` ≈ Ubuntu 24.04, `macos-latest` ≈ macOS 14, `windows-latest`
+with current MSVC). If your local distribution is older, `scripts/lint.sh`
+and the `coverage` preset may report clean locally and still fail CI. The
+cases that have actually bitten this project:
+
+| Concern | What CI runs | What older distros ship | Mitigation |
+| --- | --- | --- | --- |
+| `clang-tidy` | ≥ 18 (`bugprone-unsafe-functions`, `clang-analyzer-optin.core.EnumCastOutOfRange`, stricter analyzer paths) | Debian 12 ships 14 | Install a matching version: `sudo apt install clang-tidy-19` and run `BUILD_DIR=build/debug clang-tidy-19 ...` (or let CI catch it on the PR). |
+| `lcov` | 2.x (errors on macro-expanded line-number mismatches; errors when `--remove` patterns match zero files; uses `branch_coverage` not `lcov_branch_coverage`) | Debian 12 ships 1.16 | The flags in `.github/workflows/ci.yml`'s coverage job (`--ignore-errors mismatch`, `--ignore-errors unused`, `--rc branch_coverage=1`) compensate. If you're tweaking coverage locally, use the same flags. |
+| `head`, `stdbuf` | GNU coreutils on Linux runners; BSD coreutils on macOS runners (no `stdbuf`, `head -n 0` is rejected as "illegal line count") | GNU coreutils on most Linux | Linux-only CTest entries are gated with `CMAKE_SYSTEM_NAME STREQUAL "Linux"` rather than `CMAKE_HOST_UNIX`. Keep new shell-out tests narrow if they depend on GNU tools. |
+
+If you can, run the same compiler family CI uses (`CC=clang-19`) so warning
+flags and analyzer findings match. The lint job, in particular, is gated
+on the *runner's* clang-tidy, not yours.
+
 ### Sanitizers on newer Linux kernels (WSL2, kernel ≥ 6.x)
 
 Linux ≥ 6.x defaults `vm.mmap_rnd_bits` to 32, which collides with the shadow
