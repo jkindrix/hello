@@ -98,7 +98,11 @@ if(BUILD_SHARED_LIBS AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
             "${CMAKE_CURRENT_SOURCE_DIR}/check_exports.sh"
             $<TARGET_FILE:hello>
     )
-    set_tests_properties(symbol_export_check PROPERTIES TIMEOUT 10)
+    # 30s rather than 10s: the test itself is sub-second (nm + sort + diff),
+    # but it has timed out under GitHub Actions runner contention right at
+    # the 10s boundary. Generous margin avoids the flake without masking a
+    # real performance regression.
+    set_tests_properties(symbol_export_check PROPERTIES TIMEOUT 30)
 endif()
 
 # Policy test: every HELLO_API declaration in the public header must carry a
