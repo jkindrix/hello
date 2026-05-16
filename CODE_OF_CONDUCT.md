@@ -15,7 +15,7 @@ the project.
 ## Reporting
 
 Conduct concerns may be reported privately to the maintainer
-([@jkindrix](https://github.com/jkindrix)) via a GitHub security advisory or
+([`@jkindrix`](https://github.com/jkindrix)) via a GitHub security advisory or
 by emailing the address listed on the maintainer's GitHub profile. Reports
 will be acknowledged within 72 hours. Reporters' identities will be kept
 confidential to the extent the maintainer can do so while still acting on

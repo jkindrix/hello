@@ -55,6 +55,29 @@ set_tests_properties(cli_help PROPERTIES
     TIMEOUT 10
 )
 
+# Unknown-option path: must exit 2 AND print "unknown option" to stderr.
+# WILL_FAIL+PASS_REGULAR_EXPRESSION don't compose the way you'd expect
+# (regex match marks the test passed before WILL_FAIL inverts it), so wrap
+# in bash and assert both conditions explicitly.
+if(CMAKE_HOST_UNIX)
+    add_test(NAME cli_unknown_option
+        COMMAND bash -c "out=$($<TARGET_FILE:hello_cli> --bogus 2>&1); rc=$?; echo \"$out\"; test $rc -eq 2 && echo \"$out\" | grep -q 'unknown option'"
+    )
+    set_tests_properties(cli_unknown_option PROPERTIES TIMEOUT 10)
+endif()
+
+# Broken-pipe path: HELLO_ERR_IO from hello_greet must surface as CLI exit
+# code 2 (the I/O-error code), not 1. The shell wrapper closes the pipe's
+# read end so the CLI's first write fails. POSIX-only; the SIGPIPE-ignore
+# is required because the kernel would otherwise kill the writer before
+# fprintf returns.
+if(CMAKE_HOST_UNIX)
+    add_test(NAME cli_broken_pipe_exit_code
+        COMMAND bash -c "trap '' PIPE; stdbuf -o0 $<TARGET_FILE:hello_cli> Ada | head -n 0; test \${PIPESTATUS[0]} -eq 2"
+    )
+    set_tests_properties(cli_broken_pipe_exit_code PROPERTIES TIMEOUT 10)
+endif()
+
 # Visibility plumbing check: only meaningful for shared builds on ELF, where
 # a leaked private symbol would actually appear in the dynamic symbol table.
 # Static builds expose everything to linkers regardless, so the test is a

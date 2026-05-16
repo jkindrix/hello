@@ -17,14 +17,29 @@
  *
  * Exit codes:
  *   - 0  success (greeting written, or --help / --version printed)
- *   - 1  the library returned a non-OK status for at least one greeting
- *   - 2  an I/O error occurred writing to stdout, or an unknown option was
- *        passed on the command line
+ *   - 1  the library returned a non-I/O error status (e.g. invalid argument)
+ *   - 2  an I/O error occurred writing to stdout (whether detected directly
+ *        in this front-end or surfaced as HELLO_ERR_IO from the library),
+ *        or an unknown option was passed on the command line
  */
 #include "hello/hello.h"
 
 #include <stdio.h>
 #include <string.h>
+
+/* Issue one greeting and translate the library status into an exit code.
+ *   HELLO_OK     -> 0
+ *   HELLO_ERR_IO -> 2 (I/O failure surfaces as the I/O exit code)
+ *   other        -> 1 (logic errors)
+ * Errors are reported to stderr before returning. */
+static int greet_or_exit(const char *prog, const char *name) {
+    hello_status st = hello_greet(stdout, name);
+    if (st == HELLO_OK) {
+        return 0;
+    }
+    fprintf(stderr, "%s: %s\n", prog, hello_status_string(st));
+    return st == HELLO_ERR_IO ? 2 : 1;
+}
 
 /* Returns 0 on success, non-zero on I/O failure (mirrors main's exit codes). */
 static int print_usage(FILE *stream, const char *prog) {
@@ -68,19 +83,13 @@ int main(int argc, char *argv[]) {
     }
 
     if (first_name >= argc) {
-        hello_status st = hello_greet(stdout, NULL);
-        if (st != HELLO_OK) {
-            fprintf(stderr, "%s: %s\n", prog, hello_status_string(st));
-            return 1;
-        }
-        return 0;
+        return greet_or_exit(prog, NULL);
     }
 
     for (int i = first_name; i < argc; ++i) {
-        hello_status st = hello_greet(stdout, argv[i]);
-        if (st != HELLO_OK) {
-            fprintf(stderr, "%s: %s\n", prog, hello_status_string(st));
-            return 1;
+        int rc = greet_or_exit(prog, argv[i]);
+        if (rc != 0) {
+            return rc;
         }
     }
     return 0;

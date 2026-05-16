@@ -124,6 +124,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   percentage cannot be parsed.
 
 ### Fixed
+- **CLI exit-code contract was wrong for library-surfaced I/O errors.**
+  `hello_greet` returning `HELLO_ERR_IO` previously caused the CLI to
+  exit 1, but the README's exit-code table documented 2 for "I/O error
+  writing to stdout". `main()` now maps `HELLO_ERR_IO` → exit 2,
+  matching the contract. Verified via a new `cli_broken_pipe_exit_code`
+  test that closes the pipe reader and asserts the CLI exits 2.
+- **Coverage CI gate was failing its own threshold.** Filtered line
+  coverage was 87.0 % against a 90 % floor, so the coverage job would
+  have failed on first push. Two new tests (`cli_unknown_option` and
+  the broken-pipe test above) plus refactoring the greet-and-exit logic
+  into a single helper push filtered coverage to 97.1 % (hello.c 97.3 %,
+  main.c 97.0 %). Verified locally with lcov.
+- **Doxygen builds were silently emitting an unresolved-reference
+  warning.** `WARN_AS_ERROR` was `NO` and the Doxyfile's `INPUT` list
+  didn't include the project's markdown files, so README cross-links
+  to `CONTRIBUTING.md` couldn't resolve. The Doxyfile now lists
+  CONTRIBUTING / CODE_OF_CONDUCT / SECURITY / SUPPORT / CHANGELOG and
+  sets `WARN_AS_ERROR=YES` so future drift fails the docs job.
+- `@jkindrix` GitHub mentions in CONTRIBUTING.md and CODE_OF_CONDUCT.md
+  are now wrapped in backticks so Doxygen doesn't interpret them as
+  commands (it parses bare `@name` as `\name`).
+
 - CTest CLI smoke-test regexes now accept `\r?\n` so they pass on
   Windows text-mode stdout (previously anchored on bare `\n`).
 

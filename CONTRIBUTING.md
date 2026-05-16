@@ -21,7 +21,7 @@ assume all three are in place:
 
 ## Governance
 
-This is a single-maintainer project ([@jkindrix](https://github.com/jkindrix)).
+This is a single-maintainer project ([`@jkindrix`](https://github.com/jkindrix)).
 Pull requests are merged when:
 
 1. CI is green on every required job (the full workflow under

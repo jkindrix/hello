@@ -65,8 +65,8 @@ cmake --preset coverage        && cmake --build --preset coverage
 | Code | Meaning                                                                  |
 | ---- | ------------------------------------------------------------------------ |
 | 0    | Success — greeting written, or `--help` / `--version` printed.           |
-| 1    | The library returned a non-OK status for at least one greeting.          |
-| 2    | I/O error writing to stdout, or an unknown option on the command line.   |
+| 1    | The library returned a non-I/O error (e.g. `HELLO_ERR_INVALID_ARG`).     |
+| 2    | I/O error writing to stdout (including `HELLO_ERR_IO` surfaced from the library, e.g. broken pipe), or an unknown option on the command line. |
 
 These are stable and suitable for shell scripting.
 
