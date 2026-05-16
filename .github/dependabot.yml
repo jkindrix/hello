@@ -11,3 +11,11 @@ updates:
     labels:
       - dependencies
       - ci
+    # Group every action bump (major, minor, patch) into one PR per cycle.
+    # Reduces churn: one CI run, one merge click. Majors aren't auto-
+    # separated because the project's own CI is the safety net -- a
+    # breaking action change fails one of the 18 jobs.
+    groups:
+      github-actions:
+        patterns:
+          - "*"
