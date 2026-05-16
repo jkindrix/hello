@@ -5,14 +5,19 @@ are not. Please read this before opening a pull request.
 
 ## One-time maintainer setup
 
-Two repository settings have to be flipped by hand the first time you publish
-this template; the CI pipeline assumes both are in place:
+Three repository settings have to be flipped by hand the first time you
+publish this template; the CI pipeline and the issue/support workflows
+assume all three are in place:
 
 - **Settings → Pages → Source: GitHub Actions.** The `pages` job in
   `.github/workflows/ci.yml` deploys the Doxygen site on every push to
   `main` and will fail until this is set.
 - **Settings → Code security → Code scanning: enable CodeQL.** Required
   before `.github/workflows/codeql.yml` can upload SARIF results.
+- **Settings → General → Features → Discussions: enable.**
+  [SUPPORT.md](SUPPORT.md) and `.github/ISSUE_TEMPLATE/config.yml` both
+  redirect how-to / design questions to Discussions; the links 404 until
+  the feature is on.
 
 ## Governance
 

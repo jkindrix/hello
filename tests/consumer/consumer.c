@@ -5,7 +5,6 @@
  * find_package(hello) integration end-to-end.
  */
 #include <hello/hello.h>
-
 #include <stdio.h>
 
 int main(void) {

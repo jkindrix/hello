@@ -8,12 +8,12 @@
 /* Enable POSIX prototypes (fdopen, pipe) under strict C17. Must precede any
  * system header includes. */
 #if defined(__unix__) || defined(__APPLE__)
-#  ifndef _POSIX_C_SOURCE
+#ifndef _POSIX_C_SOURCE
 /* _POSIX_C_SOURCE is the standard feature-test macro defined by POSIX
  * itself; the underscore prefix is mandatory, not a style violation. */
 /* NOLINTNEXTLINE(readability-identifier-naming) */
-#    define _POSIX_C_SOURCE 200809L
-#  endif
+#define _POSIX_C_SOURCE 200809L
+#endif
 #endif
 
 #include "hello/hello.h"
@@ -23,59 +23,56 @@
 #include <string.h>
 
 #if defined(__unix__) || defined(__APPLE__)
-#  define HELLO_HAVE_PIPE_IO_TEST 1
-#  include <signal.h>
-#  include <unistd.h>
+#define HELLO_HAVE_PIPE_IO_TEST 1
+#include <signal.h>
+#include <unistd.h>
 #endif
 
 static int g_failures = 0;
 static int g_tests = 0;
 
-#define CHECK(cond)                                                            \
-    do {                                                                       \
-        if (!(cond)) {                                                         \
-            fprintf(stderr, "  FAIL: %s:%d: %s\n", __FILE__, __LINE__, #cond); \
-            ++g_failures;                                                      \
-        }                                                                      \
+#define CHECK(cond)                                                                                \
+    do {                                                                                           \
+        if (!(cond)) {                                                                             \
+            fprintf(stderr, "  FAIL: %s:%d: %s\n", __FILE__, __LINE__, #cond);                     \
+            ++g_failures;                                                                          \
+        }                                                                                          \
     } while (0)
 
 /* REQUIRE is CHECK that short-circuits the rest of the test body. Use it for
  * preconditions whose violation would make subsequent assertions dereference
  * NULL or read uninitialized memory; without it, a contract regression
  * crashes the whole harness instead of producing a clean FAIL diagnostic. */
-#define REQUIRE(cond)                                                          \
-    do {                                                                       \
-        if (!(cond)) {                                                         \
-            fprintf(stderr,                                                    \
-                    "  FAIL: %s:%d: %s (required; aborting test)\n",           \
-                    __FILE__, __LINE__, #cond);                                \
-            ++g_failures;                                                      \
-            return;                                                            \
-        }                                                                      \
+#define REQUIRE(cond)                                                                              \
+    do {                                                                                           \
+        if (!(cond)) {                                                                             \
+            fprintf(stderr, "  FAIL: %s:%d: %s (required; aborting test)\n", __FILE__, __LINE__,   \
+                    #cond);                                                                        \
+            ++g_failures;                                                                          \
+            return;                                                                                \
+        }                                                                                          \
     } while (0)
 
-#define CHECK_STR_EQ(a, b)                                                     \
-    do {                                                                       \
-        const char *_a = (a);                                                  \
-        const char *_b = (b);                                                  \
-        if (_a == NULL || _b == NULL || strcmp(_a, _b) != 0) {                 \
-            fprintf(stderr,                                                    \
-                    "  FAIL: %s:%d: expected \"%s\", got \"%s\"\n", __FILE__,  \
-                    __LINE__, _b ? _b : "(null)", _a ? _a : "(null)");         \
-            ++g_failures;                                                      \
-        }                                                                      \
+#define CHECK_STR_EQ(a, b)                                                                         \
+    do {                                                                                           \
+        const char *_a = (a);                                                                      \
+        const char *_b = (b);                                                                      \
+        if (_a == NULL || _b == NULL || strcmp(_a, _b) != 0) {                                     \
+            fprintf(stderr, "  FAIL: %s:%d: expected \"%s\", got \"%s\"\n", __FILE__, __LINE__,    \
+                    _b ? _b : "(null)", _a ? _a : "(null)");                                       \
+            ++g_failures;                                                                          \
+        }                                                                                          \
     } while (0)
 
-#define TEST(name)                                                             \
-    static void name(void);                                                    \
-    static void run_##name(void) {                                             \
-        ++g_tests;                                                             \
-        fprintf(stderr, "[ RUN  ] %s\n", #name);                               \
-        int before = g_failures;                                               \
-        name();                                                                \
-        fprintf(stderr, "[ %s ] %s\n",                                         \
-                g_failures == before ? " OK " : "FAIL", #name);                \
-    }                                                                          \
+#define TEST(name)                                                                                 \
+    static void name(void);                                                                        \
+    static void run_##name(void) {                                                                 \
+        ++g_tests;                                                                                 \
+        fprintf(stderr, "[ RUN  ] %s\n", #name);                                                   \
+        int before = g_failures;                                                                   \
+        name();                                                                                    \
+        fprintf(stderr, "[ %s ] %s\n", g_failures == before ? " OK " : "FAIL", #name);             \
+    }                                                                                              \
     static void name(void)
 
 TEST(format_default_name_is_world) {
@@ -216,16 +213,12 @@ TEST(version_is_nonempty) {
 static void check_status_string(hello_status code, const char *label) {
     const char *s = hello_status_string(code);
     if (s == NULL) {
-        fprintf(stderr,
-                "  FAIL: hello_status_string(%s) returned NULL (required)\n",
-                label);
+        fprintf(stderr, "  FAIL: hello_status_string(%s) returned NULL (required)\n", label);
         ++g_failures;
         return;
     }
     if (s[0] == '\0') {
-        fprintf(stderr,
-                "  FAIL: hello_status_string(%s) returned empty string\n",
-                label);
+        fprintf(stderr, "  FAIL: hello_status_string(%s) returned empty string\n", label);
         ++g_failures;
     }
 }
@@ -233,8 +226,8 @@ static void check_status_string(hello_status code, const char *label) {
 TEST(status_string_covers_all_codes) {
     CHECK_STR_EQ(hello_status_string(HELLO_OK), "ok");
     check_status_string(HELLO_ERR_INVALID_ARG, "HELLO_ERR_INVALID_ARG");
-    check_status_string(HELLO_ERR_IO,          "HELLO_ERR_IO");
-    check_status_string(HELLO_ERR_OVERFLOW,    "HELLO_ERR_OVERFLOW");
+    check_status_string(HELLO_ERR_IO, "HELLO_ERR_IO");
+    check_status_string(HELLO_ERR_OVERFLOW, "HELLO_ERR_OVERFLOW");
     /* Unknown codes still produce a non-empty string. */
     check_status_string((hello_status)999, "(hello_status)999");
 }

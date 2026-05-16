@@ -12,11 +12,11 @@
 #ifndef HELLO_HELLO_H
 #define HELLO_HELLO_H
 
-#include <stddef.h>
-#include <stdio.h>
-
 #include "hello/export.h"
 #include "hello/version.h"
+
+#include <stddef.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,8 +56,7 @@ HELLO_API hello_status hello_greet(FILE *out, const char *name);
  *         small to hold the full greeting plus NUL (output is still
  *         NUL-terminated and truncated), or another error code.
  */
-HELLO_API hello_status hello_format(char *buf, size_t buf_size,
-                                    const char *name, size_t *needed);
+HELLO_API hello_status hello_format(char *buf, size_t buf_size, const char *name, size_t *needed);
 
 /** Return the library's semantic version string ("MAJOR.MINOR.PATCH"). */
 HELLO_API const char *hello_version(void);

@@ -22,7 +22,9 @@ static const char *hello_effective_name(const char *name) {
     return name;
 }
 
-const char *hello_version(void) { return HELLO_VERSION_STRING; }
+const char *hello_version(void) {
+    return HELLO_VERSION_STRING;
+}
 
 const char *hello_status_string(hello_status status) {
     switch (status) {
@@ -39,8 +41,7 @@ const char *hello_status_string(hello_status status) {
     }
 }
 
-hello_status hello_format(char *buf, size_t buf_size, const char *name,
-                          size_t *needed) {
+hello_status hello_format(char *buf, size_t buf_size, const char *name, size_t *needed) {
     if (buf_size > 0 && buf == NULL) {
         return HELLO_ERR_INVALID_ARG;
     }

@@ -58,8 +58,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: seanmiddleditch/gha-setup-ninja@v5
-      - name: Install clang
-        run: sudo apt-get update && sudo apt-get install -y clang
+      - name: Install clang + sanitizer runtimes
+        # libclang-rt-dev is normally pulled by clang via Recommends, but
+        # making the dependency explicit insulates us from runner-image
+        # changes that disable Recommends or repackage the metapackages.
+        run: sudo apt-get update && sudo apt-get install -y clang libclang-rt-dev
       - run: cmake --preset asan
         env:
           CC: clang
@@ -75,8 +78,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: seanmiddleditch/gha-setup-ninja@v5
-      - name: Install clang
-        run: sudo apt-get update && sudo apt-get install -y clang
+      - name: Install clang + sanitizer runtimes
+        # libclang-rt-dev is normally pulled by clang via Recommends, but
+        # making the dependency explicit insulates us from runner-image
+        # changes that disable Recommends or repackage the metapackages.
+        run: sudo apt-get update && sudo apt-get install -y clang libclang-rt-dev
       - name: Configure
         env:
           CC: clang
@@ -97,8 +103,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: seanmiddleditch/gha-setup-ninja@v5
-      - name: Install clang
-        run: sudo apt-get update && sudo apt-get install -y clang
+      - name: Install clang + sanitizer runtimes
+        # libclang-rt-dev is normally pulled by clang via Recommends, but
+        # making the dependency explicit insulates us from runner-image
+        # changes that disable Recommends or repackage the metapackages.
+        run: sudo apt-get update && sudo apt-get install -y clang libclang-rt-dev
       - run: cmake --preset tsan
         env:
           CC: clang
@@ -215,8 +224,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: seanmiddleditch/gha-setup-ninja@v5
-      - name: Install clang
-        run: sudo apt-get update && sudo apt-get install -y clang
+      - name: Install clang + sanitizer runtimes
+        # libclang-rt-dev is normally pulled by clang via Recommends, but
+        # making the dependency explicit insulates us from runner-image
+        # changes that disable Recommends or repackage the metapackages.
+        run: sudo apt-get update && sudo apt-get install -y clang libclang-rt-dev
       - name: Configure with fuzzers
         env:
           CC: clang
