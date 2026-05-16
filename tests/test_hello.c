@@ -163,7 +163,9 @@ TEST(greet_writes_expected_bytes) {
      * stream and produces a confusing "expected ..., got" diagnostic instead
      * of the actual cause. */
     REQUIRE(st == HELLO_OK);
-    rewind(fp);
+    /* fseek instead of rewind: rewind has no error reporting, and newer
+     * clang-tidy (bugprone-unsafe-functions) flags it. */
+    REQUIRE(fseek(fp, 0, SEEK_SET) == 0);
     char buf[64] = {0};
     size_t n = fread(buf, 1, sizeof buf - 1, fp);
     REQUIRE(n > 0);
@@ -228,7 +230,9 @@ TEST(status_string_covers_all_codes) {
     check_status_string(HELLO_ERR_INVALID_ARG, "HELLO_ERR_INVALID_ARG");
     check_status_string(HELLO_ERR_IO, "HELLO_ERR_IO");
     check_status_string(HELLO_ERR_OVERFLOW, "HELLO_ERR_OVERFLOW");
-    /* Unknown codes still produce a non-empty string. */
+    /* Unknown codes still produce a non-empty string. The cast is
+     * deliberately out-of-range to exercise the switch's default arm. */
+    /* NOLINTNEXTLINE(clang-analyzer-optin.core.EnumCastOutOfRange) */
     check_status_string((hello_status)999, "(hello_status)999");
 }
 

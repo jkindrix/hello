@@ -152,9 +152,16 @@ jobs:
       - run: cmake --build --preset coverage
       - run: ctest --test-dir build/coverage --output-on-failure
       - name: Collect coverage
+        # --ignore-errors mismatch: lcov 2.x is strict about gcov reporting
+        # a different end-line for functions defined inside the harness's
+        # TEST() macro vs. the source location it expanded from. The data
+        # is still correct; the strictness is the bug.
+        # --rc branch_coverage=1: 2.x renamed lcov_branch_coverage to drop
+        # the lcov_ prefix.
         run: |
           lcov --capture --directory build/coverage --output-file coverage.info \
-               --rc lcov_branch_coverage=1
+               --ignore-errors mismatch \
+               --rc branch_coverage=1
           lcov --remove coverage.info '/usr/*' '*/tests/*' --output-file coverage.info
           lcov --list coverage.info
       - name: Enforce minimum line coverage

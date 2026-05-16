@@ -68,10 +68,15 @@ endif()
 
 # Broken-pipe path: HELLO_ERR_IO from hello_greet must surface as CLI exit
 # code 2 (the I/O-error code), not 1. The shell wrapper closes the pipe's
-# read end so the CLI's first write fails. POSIX-only; the SIGPIPE-ignore
-# is required because the kernel would otherwise kill the writer before
-# fprintf returns.
-if(CMAKE_HOST_UNIX)
+# read end so the CLI's first write fails. SIGPIPE is ignored or the kernel
+# would kill the writer before fprintf returns.
+#
+# Linux-only, not generic Unix: macOS lacks `stdbuf` (it's GNU coreutils,
+# not BSD) and its BSD `head` rejects `head -n 0` as "illegal line count".
+# The pipe-IO semantics are still tested portably by the
+# greet_reports_io_error_on_read_only_stream unit test; this is the
+# CLI-side complement.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     add_test(NAME cli_broken_pipe_exit_code
         COMMAND bash -c "trap '' PIPE; stdbuf -o0 $<TARGET_FILE:hello_cli> Ada | head -n 0; test \${PIPESTATUS[0]} -eq 2"
     )
