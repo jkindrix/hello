@@ -29,7 +29,7 @@ jobs:
             compiler: msvc
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Ninja
         uses: seanmiddleditch/gha-setup-ninja@v5
@@ -56,7 +56,7 @@ jobs:
     name: ASan + UBSan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: seanmiddleditch/gha-setup-ninja@v5
       - name: Install clang + sanitizer runtimes
         # libclang-rt-dev is normally pulled by clang via Recommends, but
@@ -76,7 +76,7 @@ jobs:
     name: MemorySanitizer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: seanmiddleditch/gha-setup-ninja@v5
       - name: Install clang + sanitizer runtimes
         # libclang-rt-dev is normally pulled by clang via Recommends, but
@@ -101,7 +101,7 @@ jobs:
     name: ThreadSanitizer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: seanmiddleditch/gha-setup-ninja@v5
       - name: Install clang + sanitizer runtimes
         # libclang-rt-dev is normally pulled by clang via Recommends, but
@@ -120,7 +120,7 @@ jobs:
     name: clang-format + clang-tidy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install tools
         run: sudo apt-get update && sudo apt-get install -y clang-format clang-tidy ninja-build
       - name: clang-format (check)
@@ -144,7 +144,7 @@ jobs:
     name: Coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: seanmiddleditch/gha-setup-ninja@v5
       - name: Install lcov
         run: sudo apt-get update && sudo apt-get install -y lcov
@@ -167,7 +167,7 @@ jobs:
     name: Shared library + symbol-export check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: seanmiddleditch/gha-setup-ninja@v5
       - name: Configure shared
         run: cmake -S . -B build/shared -G Ninja
@@ -182,7 +182,7 @@ jobs:
     name: Install + downstream find_package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: seanmiddleditch/gha-setup-ninja@v5
       - name: Configure + build hello
         run: |
@@ -206,7 +206,7 @@ jobs:
     name: libFuzzer smoke
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: seanmiddleditch/gha-setup-ninja@v5
       - name: Install clang + sanitizer runtimes
         # libclang-rt-dev is normally pulled by clang via Recommends, but
@@ -238,7 +238,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install Doxygen
         run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
       - name: Build docs
@@ -266,7 +266,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install Doxygen
         run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
       - name: Build docs
