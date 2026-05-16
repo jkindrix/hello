@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - uses: seanmiddleditch/gha-setup-ninja@v5
+      # ninja is preinstalled on all GitHub-hosted runners; no setup step needed.
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
