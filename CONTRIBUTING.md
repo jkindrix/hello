@@ -39,6 +39,33 @@ cmake --preset asan && cmake --build --preset asan
 ctest --preset asan
 ```
 
+### Sanitizers on newer Linux kernels (WSL2, kernel ≥ 6.x)
+
+Linux ≥ 6.x defaults `vm.mmap_rnd_bits` to 32, which collides with the shadow
+memory layout used by Clang ≤ 15's ASan/TSan/libFuzzer runtimes. You'll see
+either `FATAL: ThreadSanitizer: unexpected memory mapping` or sporadic
+SEGFAULTs from sanitizer-instrumented binaries. Either:
+
+- **Use Clang ≥ 16** for sanitizer/fuzz builds (recommended; the runtime was
+  fixed there). On Debian/Ubuntu:
+
+  ```sh
+  sudo apt install -y clang-19 clang-tools-19 libclang-rt-19-dev
+  CC=clang-19 cmake --preset asan
+  CC=clang-19 cmake --preset tsan
+  CC=clang-19 cmake -S . -B build/fuzz -G Ninja \
+      -DCMAKE_BUILD_TYPE=Debug -DHELLO_BUILD_FUZZERS=ON
+  ```
+
+- **Or lower the ASLR entropy at runtime** (doesn't persist across reboots):
+
+  ```sh
+  sudo sysctl -w vm.mmap_rnd_bits=28
+  ```
+
+CI's `ubuntu-latest` runners use a kernel/clang combination where this isn't
+an issue.
+
 ## Coding standards
 
 - C17 (no extensions: `-std=c17`, `CMAKE_C_EXTENSIONS=OFF`).
