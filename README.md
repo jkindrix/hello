@@ -48,7 +48,7 @@ Hello, Grace!
 Hello, Margaret Hamilton!
 
 $ ./build/debug/hello --version
-hello 1.0.0
+hello 1.1.0
 ```
 
 Other presets:

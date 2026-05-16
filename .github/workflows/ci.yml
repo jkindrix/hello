@@ -82,19 +82,14 @@ jobs:
         # making the dependency explicit insulates us from runner-image
         # changes that disable Recommends or repackage the metapackages.
         run: sudo apt-get update && sudo apt-get install -y clang libclang-rt-dev
-      - name: Configure
+      - run: cmake --preset msan
         env:
           CC: clang
-        run: cmake -S . -B build/msan -G Ninja
-                   -DCMAKE_BUILD_TYPE=Debug
-                   -DHELLO_ENABLE_MSAN=ON
-      - name: Build
-        run: cmake --build build/msan
-      - name: Test
-        # MSan environment is baked into the test properties; do not also set
-        # MSAN_OPTIONS here or we'd be re-asserting the same surface in two
-        # places (the thing we just fixed by baking it in).
-        run: ctest --test-dir build/msan --output-on-failure
+      - run: cmake --build --preset msan
+      # MSan environment is baked into the test properties; do not also set
+      # MSAN_OPTIONS here or we'd be re-asserting the same surface in two
+      # places (the thing we just fixed by baking it in).
+      - run: ctest --test-dir build/msan --output-on-failure
 
   tsan:
     name: ThreadSanitizer

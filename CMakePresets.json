@@ -49,6 +49,15 @@
       }
     },
     {
+      "name": "msan",
+      "inherits": "base",
+      "displayName": "Debug + MSan (Clang only)",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug",
+        "HELLO_ENABLE_MSAN": "ON"
+      }
+    },
+    {
       "name": "coverage",
       "inherits": "base",
       "displayName": "Debug + Coverage",
@@ -64,6 +73,7 @@
     { "name": "relwithdebinfo", "configurePreset": "relwithdebinfo" },
     { "name": "asan",           "configurePreset": "asan" },
     { "name": "tsan",           "configurePreset": "tsan" },
+    { "name": "msan",           "configurePreset": "msan" },
     { "name": "coverage",       "configurePreset": "coverage" }
   ],
   "testPresets": [
