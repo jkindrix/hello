@@ -86,6 +86,26 @@ int main(void){char b[8]; strcpy(b,\"hi\"); return b[0];}" HELLO_HAVE_FORTIFY3)
         )
     endif()
 
+    # Reproducible-build flags: strip the absolute source/build paths from
+    # __FILE__ strings, assertion messages, and DWARF debug info so an
+    # installed binary doesn't bake the developer's working directory into
+    # its contents. Applied to non-Debug builds only; Debug keeps absolute
+    # paths so debuggers can resolve sources via $cwd-independent lookup.
+    # -ffile-prefix-map requires GCC >= 8 / Clang >= 10; check_c_compiler_flag
+    # gates it for older toolchains.
+    if(NOT MSVC AND NOT DEFINED HELLO_HAVE_FILE_PREFIX_MAP_CACHED)
+        include(CheckCCompilerFlag)
+        check_c_compiler_flag("-ffile-prefix-map=/=/" HELLO_HAVE_FILE_PREFIX_MAP)
+        set(HELLO_HAVE_FILE_PREFIX_MAP_CACHED "${HELLO_HAVE_FILE_PREFIX_MAP}"
+            CACHE INTERNAL "")
+    endif()
+    if(HELLO_HAVE_FILE_PREFIX_MAP_CACHED)
+        target_compile_options(${target} PRIVATE
+            "$<$<NOT:$<CONFIG:Debug>>:-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.>"
+            "$<$<NOT:$<CONFIG:Debug>>:-ffile-prefix-map=${CMAKE_BINARY_DIR}=./build>"
+        )
+    endif()
+
     # Link-time hardening: full RELRO + BIND_NOW + PIE for executables on ELF.
     # Skipped on macOS (Mach-O) and Windows. Shared libs already get PIC via
     # POSITION_INDEPENDENT_CODE; PIE is only meaningful for executables.

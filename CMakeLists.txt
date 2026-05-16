@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.20)
 # Project metadata
 # --------------------------------------------------------------------------- #
 project(hello
-    VERSION 1.0.0
+    VERSION 1.1.0
     DESCRIPTION "A small, modern C 'Hello, World!' library and CLI."
     LANGUAGES C
 )

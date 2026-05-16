@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-05-16
+
 ### Added
 - Test harness gains a `REQUIRE(cond)` macro that short-circuits the
   enclosing test on failure. Replaces the latent crash risk in
@@ -98,7 +100,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   detects lcov 1.x vs 2.x and applies the matching flag set so
   contributors on older distros (Debian 12 still ships lcov 1.16) can
   reproduce the CI coverage gate without hand-editing the workflow
-  commands. Enforces the same 90 % line-coverage floor.
+  commands. Enforces the same 90 % line-coverage floor. CI's coverage
+  job now delegates to the same script so the lcov flag surface lives
+  in exactly one place.
+- Reproducible-build flags: `-ffile-prefix-map=${CMAKE_SOURCE_DIR}=.`
+  and `-ffile-prefix-map=${CMAKE_BINARY_DIR}=./build` on non-Debug
+  builds so installed binaries don't bake the developer's working
+  directory into `__FILE__`, assertion messages, or DWARF debug info.
+  Gated behind a `check_c_compiler_flag` probe for older toolchains
+  (GCC ≥ 8 / Clang ≥ 10 required).
 
 ### Changed
 - Split the `docs` workflow job into a build-only `docs` job (runs on
