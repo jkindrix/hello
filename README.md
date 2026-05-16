@@ -57,6 +57,7 @@ Other presets:
 cmake --preset release         && cmake --build --preset release
 cmake --preset asan            && cmake --build --preset asan
 cmake --preset tsan            && cmake --build --preset tsan
+cmake --preset msan            && cmake --build --preset msan     # CC=clang required
 cmake --preset coverage        && cmake --build --preset coverage
 ```
 
@@ -202,7 +203,7 @@ Common consumer failure modes and their fixes:
 | `find_package(hello)` reports "not found". | The install prefix isn't on CMake's search path. | Pass `-DCMAKE_PREFIX_PATH=<your install prefix>` to your project's `cmake` configure, or set `hello_DIR` to the directory containing `helloConfig.cmake`. |
 | MSVC shared link fails with unresolved `hello_*` externs. | Consumer compiled without the `dllimport` annotation. | Define `HELLO_USE_SHARED` before `#include <hello/hello.h>`. CMake's `find_package(hello)` does this automatically; non-CMake consumers must do it themselves. |
 | `pkg-config --cflags --libs hello` prints "not found". | Install prefix's pkgconfig dir isn't on `PKG_CONFIG_PATH`. | `export PKG_CONFIG_PATH=<prefix>/lib/pkgconfig:$PKG_CONFIG_PATH`. The `.pc` file itself is relocatable, so it doesn't matter where you put the install. |
-| Sanitizer build aborts with `unexpected memory mapping`. | Linux kernel ≥ 6.x with Clang ≤ 15: ASLR entropy exceeds the sanitizer shadow region. | Use Clang ≥ 16 (`CC=clang-19 cmake --preset asan`), or lower the entropy: `sudo sysctl -w vm.mmap_rnd_bits=28`. Detailed in [CONTRIBUTING.md](CONTRIBUTING.md). |
+| Sanitizer build aborts with `unexpected memory mapping`. | Linux kernel ≥ 6.x with Clang ≤ 15: ASLR entropy exceeds the sanitizer shadow region. Affects every sanitizer/fuzz preset (`asan`, `tsan`, `msan`, fuzz). | Use Clang ≥ 16 (`CC=clang-19 cmake --preset asan` / `tsan` / `msan`), or lower the entropy: `sudo sysctl -w vm.mmap_rnd_bits=28`. Detailed in [CONTRIBUTING.md](CONTRIBUTING.md). |
 | Fuzz target fails to link with `libclang_rt.fuzzer-*.a: No such file`. | Debian splits Clang's sanitizer/fuzzer runtimes into a separate package. | `sudo apt install -y libclang-rt-19-dev` (or the version matching your `clang`). |
 
 ## Development

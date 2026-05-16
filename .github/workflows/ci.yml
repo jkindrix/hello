@@ -6,6 +6,14 @@ on:
   pull_request:
     branches: [main]
 
+# Default to least-privilege: read-only access to repo contents and nothing
+# else. Jobs that need more (the `pages` deploy in particular) override this
+# explicitly at the job level. This makes the elevated-permission jobs easy
+# to audit and stops a hypothetical compromised step in any other job from
+# being able to write to the repo.
+permissions:
+  contents: read
+
 jobs:
   build-test:
     name: ${{ matrix.os }} / ${{ matrix.compiler }} / ${{ matrix.preset }}
@@ -29,7 +37,7 @@ jobs:
             compiler: msvc
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
 
       # ninja is preinstalled on all GitHub-hosted runners; no setup step needed.
 
@@ -55,7 +63,7 @@ jobs:
     name: ASan + UBSan
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       # ninja is preinstalled on all GitHub-hosted runners; no setup step needed.
       - name: Install clang + sanitizer runtimes
         # libclang-rt-dev is normally pulled by clang via Recommends, but
@@ -75,7 +83,7 @@ jobs:
     name: MemorySanitizer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       # ninja is preinstalled on all GitHub-hosted runners; no setup step needed.
       - name: Install clang + sanitizer runtimes
         # libclang-rt-dev is normally pulled by clang via Recommends, but
@@ -95,7 +103,7 @@ jobs:
     name: ThreadSanitizer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       # ninja is preinstalled on all GitHub-hosted runners; no setup step needed.
       - name: Install clang + sanitizer runtimes
         # libclang-rt-dev is normally pulled by clang via Recommends, but
@@ -114,7 +122,7 @@ jobs:
     name: clang-format + clang-tidy
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       - name: Install tools
         run: sudo apt-get update && sudo apt-get install -y clang-format clang-tidy ninja-build
       - name: clang-format (check)
@@ -138,7 +146,7 @@ jobs:
     name: Coverage
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       # ninja is preinstalled on all GitHub-hosted runners; no setup step needed.
       - name: Install lcov
         run: sudo apt-get update && sudo apt-get install -y lcov
@@ -152,7 +160,7 @@ jobs:
         env:
           MIN_LINE_COVERAGE: '90'
         run: scripts/coverage.sh build/coverage
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: coverage-report
           path: build/coverage/coverage.info
@@ -161,7 +169,7 @@ jobs:
     name: Shared library + symbol-export check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       # ninja is preinstalled on all GitHub-hosted runners; no setup step needed.
       - name: Configure shared
         run: cmake -S . -B build/shared -G Ninja
@@ -176,7 +184,7 @@ jobs:
     name: Install + downstream find_package
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       # ninja is preinstalled on all GitHub-hosted runners; no setup step needed.
       - name: Configure + build hello
         run: |
@@ -200,7 +208,7 @@ jobs:
     name: libFuzzer smoke
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       # ninja is preinstalled on all GitHub-hosted runners; no setup step needed.
       - name: Install clang + sanitizer runtimes
         # libclang-rt-dev is normally pulled by clang via Recommends, but
@@ -232,12 +240,12 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       - name: Install Doxygen
         run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
       - name: Build docs
         run: doxygen docs/Doxyfile
-      - uses: actions/upload-artifact@v7
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a  # v7
         with:
           name: api-docs
           path: docs/html
@@ -260,17 +268,17 @@ jobs:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6
       - name: Install Doxygen
         run: sudo apt-get update && sudo apt-get install -y doxygen graphviz
       - name: Build docs
         run: doxygen docs/Doxyfile
       - name: Configure Pages
-        uses: actions/configure-pages@v6
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d  # v6
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9  # v5
         with:
           path: docs/html
       - name: Deploy to GitHub Pages
         id: deploy
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@cd2ce8fcbc39b97be8ca5fce6e763baed58fa128  # v5

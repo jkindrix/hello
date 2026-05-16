@@ -38,5 +38,9 @@ Link-time (Linux executables):
 - `-Wl,-z,relro -Wl,-z,now` (full RELRO + immediate symbol binding).
 - `-Wl,-z,noexecstack` (non-executable stack).
 
-CI exercises every change under AddressSanitizer + UndefinedBehaviorSanitizer
-with `halt_on_error=1` and `detect_leaks=1`.
+CI exercises every change under AddressSanitizer + UndefinedBehaviorSanitizer,
+ThreadSanitizer, and MemorySanitizer (each in its own job, with
+`halt_on_error=1` and `detect_leaks=1` where applicable). A libFuzzer smoke
+run exercises both fuzz harnesses against a seed corpus on every push, and
+CodeQL's `security-and-quality` query suite runs weekly plus on every
+push/PR.
