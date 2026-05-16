@@ -31,8 +31,8 @@ static int print_usage(FILE *stream, const char *prog) {
     int rc = fprintf(stream,
                      "Usage: %s [NAME]...\n"
                      "       %s -- [NAME]...\n"
-                     "       %s --version\n"
-                     "       %s --help\n"
+                     "       %s {--version | -V}\n"
+                     "       %s {--help | -h}\n"
                      "\n"
                      "Print a friendly greeting. With no NAME, greets \"World\".\n"
                      "Use \"--\" to greet names that begin with \"-\".\n",

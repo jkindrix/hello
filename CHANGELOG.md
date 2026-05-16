@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - CLI `--` end-of-options terminator so names beginning with `-` can be
   greeted (`hello -- --version` greets the literal name `--version`).
   Covered by two new CTest cases.
+- Portable `HELLO_ERR_IO` test (`greet_reports_io_error_on_read_only_stream`)
+  that opens the platform null device in read mode and asserts
+  `hello_greet` reports `HELLO_ERR_IO`. Complements the POSIX-only
+  broken-pipe test and closes the Windows coverage gap for that branch.
+- CLI `--help` output now lists the `-h` and `-V` short aliases (they
+  were already accepted, just undocumented).
 - Unit test for the `HELLO_ERR_IO` branch of `hello_greet`, driving
   `fprintf` failure via a pipe with its read end closed and `SIGPIPE`
   ignored. POSIX-guarded; skipped on Windows.

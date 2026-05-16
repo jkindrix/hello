@@ -115,6 +115,30 @@ TEST(greet_rejects_null_stream) {
     CHECK(st == HELLO_ERR_INVALID_ARG);
 }
 
+TEST(greet_reports_io_error_on_read_only_stream) {
+    /* Portable HELLO_ERR_IO coverage: open the null device for reading and
+     * write to it. fprintf goes through the FILE's write handler which
+     * eventually invokes the OS write() against an O_RDONLY descriptor,
+     * which fails with EBADF on POSIX and the Windows equivalent on MSVC.
+     * Unbuffered mode so the failure is visible at fprintf's return rather
+     * than deferred to fflush. */
+    const char *null_dev =
+#ifdef _WIN32
+        "NUL";
+#else
+        "/dev/null";
+#endif
+    FILE *fp = fopen(null_dev, "rb");
+    if (fp == NULL) {
+        fprintf(stderr, "  SKIP: cannot open %s for reading\n", null_dev);
+        return;
+    }
+    setvbuf(fp, NULL, _IONBF, 0);
+    hello_status st = hello_greet(fp, "Ada");
+    CHECK(st == HELLO_ERR_IO);
+    fclose(fp);
+}
+
 TEST(greet_writes_expected_bytes) {
     /* tmpfile() gives us a binary-safe temp stream we can rewind and read. */
     FILE *fp = tmpfile();
@@ -187,6 +211,7 @@ int main(void) {
     run_format_rejects_null_buf_with_nonzero_size();
     run_format_allows_zero_size_query();
     run_greet_rejects_null_stream();
+    run_greet_reports_io_error_on_read_only_stream();
     run_greet_writes_expected_bytes();
 #ifdef HELLO_HAVE_PIPE_IO_TEST
     run_greet_reports_io_error_on_broken_pipe();
